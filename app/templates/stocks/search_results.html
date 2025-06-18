@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Søkeresultater for "{{ query }}"</h1>
+  
+  {% if results %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <h2>Resultater ({{ results|length }})</h2>
+      </div>
+      <div class="card-body">
+        <div class="list-group">
+          {% for ticker in results %}
+            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="list-group-item list-group-item-action">
+              <strong>{{ ticker }}</strong>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      <p>Ingen resultater funnet for "{{ query }}".</p>
+    </div>
+  {% endif %}
+  
+  <a href="{{ url_for('stocks.list') }}" class="btn btn-secondary">Tilbake til aksjeliste</a>
+</div>
+{% endblock %}

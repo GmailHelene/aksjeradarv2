@@ -14,4 +14,3 @@ openai
 fpdf
 newsapi-python
 numpy
-newsapi-python

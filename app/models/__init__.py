@@ -1,9 +1,1 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
-from flask_migrate import Migrate
-
-# Initialiser utvidelsene
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-login_manager.login_view = 'main.login'
+# Dette er bare en tom fil for å markere at denne mappen er en Python-pakke

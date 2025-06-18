@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% block title %}Anbefaling{% endblock %}
+{% block content %}
+{% include 'analysis/_menu.html' %}
+<div class="container mt-4">
+  <h2>Anbefaling for {{ recommendation.company_name or ticker }}</h2>
+  
+  <h2>Anbefaling for {{ recommendation.company_name or ticker }}</h2>
+  
+  {% if recommendation %}
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">{{ ticker }}</h3>
+          <span class="text-muted">Sist oppdatert: {{ recommendation.prediction.last_update or 'N/A' }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="alert 
+              {% if recommendation.recommendation == 'STRONG BUY' or recommendation.recommendation == 'BUY' %}
+                alert-success
+              {% elif recommendation.recommendation == 'STRONG SELL' or recommendation.recommendation == 'SELL' %}
+                alert-danger
+              {% else %}
+                alert-warning
+              {% endif %}">
+              <h4>Anbefaling: {{ recommendation.recommendation or 'N/A' }}</h4>
+              <p><strong>Tillit:</strong> {{ recommendation.confidence or 'N/A' }}</p>
+              
+              <!-- Begrunnelse for anbefalingen -->
+              {% if recommendation.prediction and recommendation.prediction.prediction_reason %}
+                <p>{{ recommendation.prediction.prediction_reason }}</p>
+              {% endif %}
+            </div>
+            
+            <h4>Markedsdata</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Sektor:</th>
+                <td>{{ recommendation.sector or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Industri:</th>
+                <td>{{ recommendation.industry or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Markedsverdi:</th>
+                <td>{{ recommendation.market_cap or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>P/E:</th>
+                <td>{{ recommendation.pe_ratio or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Utbytte (%):</th>
+                <td>{{ recommendation.dividend_yield or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Konsensus målpris:</th>
+                <td>{{ recommendation.target_price or 'N/A' }}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="col-md-6">
+            <h4>Prediksjon</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Siste pris:</th>
+                <td>{{ recommendation.prediction.last_price or 'N/A' }}</td>
+                <td><small class="text-muted">{{ recommendation.prediction.last_update or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Predikert pris:</th>
+                <td>{{ recommendation.prediction.next_price or 'N/A' }}</td>
+                <td><small class="text-muted">{{ recommendation.prediction.prediction_date or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Endring (%):</th>
+                <td {% if recommendation.prediction.change_percent and recommendation.prediction.change_percent > 0 %}class="text-success"{% elif recommendation.prediction.change_percent and recommendation.prediction.change_percent < 0 %}class="text-danger"{% endif %}>
+                  {% if recommendation.prediction.change_percent is defined and recommendation.prediction.change_percent is not none %}
+                    {{ recommendation.prediction.change_percent|round(2) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Trend:</th>
+                <td {% if recommendation.prediction.trend == 'UP' %}class="text-success"{% elif recommendation.prediction.trend == 'DOWN' %}class="text-danger"{% endif %}>
+                  {{ recommendation.prediction.trend or 'N/A' }}
+                </td>
+                <td><small class="text-muted">{{ recommendation.prediction.trend_period or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Volatilitet:</th>
+                <td>
+                  {% if recommendation.prediction.volatility is defined and recommendation.prediction.volatility is not none %}
+                    {{ recommendation.prediction.volatility|round(2) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Dataperiode:</th>
+                <td>{{ recommendation.prediction.data_period or 'N/A' }}</td>
+              </tr>
+            </table>
+            
+            <h4>Teknisk analyse</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Signal:</th>
+                <td {% if recommendation.technical_analysis.signal == 'Buy' %}class="text-success"{% elif recommendation.technical_analysis.signal == 'Sell' %}class="text-danger"{% endif %}>
+                  {{ recommendation.technical_analysis.signal or 'N/A' }}
+                </td>
+              </tr>
+              <tr>
+                <th>RSI:</th>
+                <td>{{ recommendation.technical_analysis.rsi or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>MACD:</th>
+                <td>{{ recommendation.technical_analysis.macd or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Støttenivå:</th>
+                <td>{{ recommendation.technical_analysis.support or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Motstandsnivå:</th>
+                <td>{{ recommendation.technical_analysis.resistance or 'N/A' }}</td>
+              </tr>
+            </table>
+            
+            {% if recommendation.technical_analysis.signal_reason %}
+              <div class="alert alert-info">
+                <h5>Teknisk analyse - begrunnelse:</h5>
+                <p>{{ recommendation.technical_analysis.signal_reason }}</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {% if recommendation.technical_analysis.chart_img %}
+      <div class="card">
+        <div class="card-header">Teknisk analyse - diagram</div>
+        <div class="card-body">
+          <img src="data:image/png;base64,{{ recommendation.technical_analysis.chart_img }}" class="img-fluid" alt="Technical Chart">
+        </div>
+      </div>
+    {% endif %}
+    
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">{{ ticker }}</h3>
+          <span class="text-muted">Sist oppdatert: {{ recommendation.prediction.last_update or 'N/A' }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="alert 
+              {% if recommendation.recommendation == 'STRONG BUY' or recommendation.recommendation == 'BUY' %}
+                alert-success
+              {% elif recommendation.recommendation == 'STRONG SELL' or recommendation.recommendation == 'SELL' %}
+                alert-danger
+              {% else %}
+                alert-warning
+              {% endif %}">
+              <h4>Anbefaling: {{ recommendation.recommendation or 'N/A' }}</h4>
+              <p><strong>Tillit:</strong> {{ recommendation.confidence or 'N/A' }}</p>
+              
+              <!-- Begrunnelse for anbefalingen -->
+              {% if recommendation.prediction and recommendation.prediction.prediction_reason %}
+                <p>{{ recommendation.prediction.prediction_reason }}</p>
+              {% endif %}
+            </div>
+            
+            <h4>Markedsdata</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Sektor:</th>
+                <td>{{ recommendation.sector or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Industri:</th>
+                <td>{{ recommendation.industry or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Markedsverdi:</th>
+                <td>{{ recommendation.market_cap or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>P/E:</th>
+                <td>{{ recommendation.pe_ratio or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Utbytte (%):</th>
+                <td>{{ recommendation.dividend_yield or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Konsensus målpris:</th>
+                <td>{{ recommendation.target_price or 'N/A' }}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="col-md-6">
+            <h4>Prediksjon</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Siste pris:</th>
+                <td>{{ recommendation.prediction.last_price or 'N/A' }}</td>
+                <td><small class="text-muted">{{ recommendation.prediction.last_update or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Predikert pris:</th>
+                <td>{{ recommendation.prediction.next_price or 'N/A' }}</td>
+                <td><small class="text-muted">{{ recommendation.prediction.prediction_date or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Endring (%):</th>
+                <td {% if recommendation.prediction.change_percent and recommendation.prediction.change_percent > 0 %}class="text-success"{% elif recommendation.prediction.change_percent and recommendation.prediction.change_percent < 0 %}class="text-danger"{% endif %}>
+                  {% if recommendation.prediction.change_percent is defined and recommendation.prediction.change_percent is not none %}
+                    {{ recommendation.prediction.change_percent|round(2) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Trend:</th>
+                <td {% if recommendation.prediction.trend == 'UP' %}class="text-success"{% elif recommendation.prediction.trend == 'DOWN' %}class="text-danger"{% endif %}>
+                  {{ recommendation.prediction.trend or 'N/A' }}
+                </td>
+                <td><small class="text-muted">{{ recommendation.prediction.trend_period or '' }}</small></td>
+              </tr>
+              <tr>
+                <th>Volatilitet:</th>
+                <td>
+                  {% if recommendation.prediction.volatility is defined and recommendation.prediction.volatility is not none %}
+                    {{ recommendation.prediction.volatility|round(2) }}%
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <th>Dataperiode:</th>
+                <td>{{ recommendation.prediction.data_period or 'N/A' }}</td>
+              </tr>
+            </table>
+            
+            <h4>Teknisk analyse</h4>
+            <table class="table table-sm">
+              <tr>
+                <th>Signal:</th>
+                <td {% if recommendation.technical_analysis.signal == 'Buy' %}class="text-success"{% elif recommendation.technical_analysis.signal == 'Sell' %}class="text-danger"{% endif %}>
+                  {{ recommendation.technical_analysis.signal or 'N/A' }}
+                </td>
+              </tr>
+              <tr>
+                <th>RSI:</th>
+                <td>{{ recommendation.technical_analysis.rsi or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>MACD:</th>
+                <td>{{ recommendation.technical_analysis.macd or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Støttenivå:</th>
+                <td>{{ recommendation.technical_analysis.support or 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Motstandsnivå:</th>
+                <td>{{ recommendation.technical_analysis.resistance or 'N/A' }}</td>
+              </tr>
+            </table>
+            
+            {% if recommendation.technical_analysis.signal_reason %}
+              <div class="alert alert-info">
+                <h5>Teknisk analyse - begrunnelse:</h5>
+                <p>{{ recommendation.technical_analysis.signal_reason }}</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {% if recommendation.technical_analysis.chart_img %}
+      <div class="card">
+        <div class="card-header">Teknisk analyse - diagram</div>
+        <div class="card-body">
+          <img src="data:image/png;base64,{{ recommendation.technical_analysis.chart_img }}" class="img-fluid" alt="Technical Chart">
+        </div>
+      </div>
+    {% endif %}
+    
+  {% else %}
+    <div class="alert alert-info">Ingen anbefaling tilgjengelig.</div>
+  {% endif %}
+</div> 
+</div> 
+{% endblock %}
