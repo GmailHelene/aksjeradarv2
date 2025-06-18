@@ -1,13 +1,13 @@
 from flask import Flask
 import os
 
-# Import extensions from extensions.py instead of redefining
+# Import extensions from extensions.py
 from .extensions import db, login_manager, migrate
 
 def create_app():
     app = Flask(__name__)
     
-    # Konfigurer app
+    # Configure app
     try:
         from config import Config
         app.config.from_object(Config)
@@ -16,12 +16,12 @@ def create_app():
         app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///aksjeradar.db'
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Initialiser utvidelser
+    # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
     
-    # Registrer blueprints
+    # Register blueprints
     with app.app_context():
         from .routes.main import main
         from .routes.stocks import stocks
@@ -33,15 +33,18 @@ def create_app():
         app.register_blueprint(analysis, url_prefix='/analysis')
         app.register_blueprint(portfolio, url_prefix='/portfolio')
         
-        # Registrer modellene
+        # Register models
         from .models.user import User
         from .models.portfolio import Portfolio, PortfolioStock, StockTip
         from .models.stock import Watchlist, WatchlistStock
     
-    # Legg til Jinja2 filter
+    # Add Jinja2 filter
     @app.template_filter('now')
     def _jinja2_filter_now(format_string):
         from datetime import datetime
         return datetime.now().strftime(format_string)
     
     return app
+
+# Make sure create_app is available for import
+__all__ = ['create_app']
