@@ -1,0 +1,58 @@
+{
+  "id": "/",
+  "name": "Aksjeradar",
+  "short_name": "Aksjeradar",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "background_color": "#111",
+  "theme_color": "#0d6efd",
+  "description": "Oslo Børs Stock Analyzer - din aksje og kryptooversikt",
+  "orientation": "portrait",
+  "launch_handler": {
+    "client_mode": "auto"
+  },
+  "icons": [
+    {
+      "src": "/static/images/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/logo-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/images/logo-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/images/screenshot1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "label": "Forside"
+    },
+    {
+      "src": "/static/images/screenshot2.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "label": "Analyse"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "dir": "ltr",
+  "lang": "nb"
+}

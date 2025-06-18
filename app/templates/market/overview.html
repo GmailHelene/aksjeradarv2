@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Markedsoversikt{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Markedsoversikt</h1>
+  
+  <!-- Viktige indekser -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2>Globale indekser</h2>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Indeks</th>
+              <th>Siste</th>
+              <th>Endring</th>
+              <th>% Endring</th>
+              <th>Oppdatert</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for name, data in indices.items() %}
+            <tr>
+              <td><strong>{{ name }}</strong></td>
+              <td>{{ data.last_price }}</td>
+              <td {% if data.change and data.change > 0 %}class="text-success"{% elif data.change and data.change < 0 %}class="text-danger"{% endif %}>
+                {% if data.change != 'N/A' %}
+                  {{ data.change }}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td {% if data.change_percent and data.change_percent > 0 %}class="text-success"{% elif data.change_percent and data.change_percent < 0 %}class="text-danger"{% endif %}>
+                {% if data.change_percent != 'N/A' %}
+                  {{ data.change_percent }}%
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td>{{ data.last_update if data.last_update is defined else 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Sektoroversikt -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2>Sektoroversikt</h2>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Sektor</th>
+              <th>Siste</th>
+              <th>Endring</th>
+              <th>% Endring</th>
+              <th>Oppdatert</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for name, data in sectors.items() %}
+            <tr>
+              <td><strong>{{ name }}</strong></td>
+              <td>{{ data.last_price }}</td>
+              <td {% if data.change and data.change > 0 %}class="text-success"{% elif data.change and data.change < 0 %}class="text-danger"{% endif %}>
+                {% if data.change != 'N/A' %}
+                  {{ data.change }}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td {% if data.change_percent and data.change_percent > 0 %}class="text-success"{% elif data.change_percent and data.change_percent < 0 %}class="text-danger"{% endif %}>
+                {% if data.change_percent != 'N/A' %}
+                  {{ data.change_percent }}%
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td>{{ data.last_update if data.last_update is defined else 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Markedsnyheter -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h2>Siste markedsnyheter</h2>
+    </div>
+    <div class="card-body">
+      {% for item in news %}
+      <div class="mb-3">
+        <h5>{{ item.title }}</h5>
+        <p>{{ item.summary }}</p>
+        <small class="text-muted">{{ item.date }} • {{ item.source }}</small>
+      </div>
+      {% if not loop.last %}<hr>{% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
