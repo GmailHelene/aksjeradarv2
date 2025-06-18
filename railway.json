@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "gunicorn run:app",
+    "startCommand": "mkdir -p logs && gunicorn run:app --log-level=debug",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

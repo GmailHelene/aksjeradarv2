@@ -1,3 +1,16 @@
+// Basic functionality for Aksjeradar app
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Aksjeradar app initialized');
+    
+    // Initialize Bootstrap components
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    if (typeof bootstrap !== 'undefined') {
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+
 // Initialize tooltips
 document.addEventListener('DOMContentLoaded', function() {
     // Check if bootstrap is loaded
