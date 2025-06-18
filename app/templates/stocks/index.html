@@ -1,157 +1,173 @@
 {% extends 'base.html' %}
-{% block title %}Aksjer, Krypto og Valuta{% endblock %}
+
+{% block title %}Aksjeoversikt | Aksjeradar{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h2>Oslo Børs</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Ticker</th>
-        <th>Navn</th>
-        <th>Pris</th>
-        <th>Endring %</th>
-        <th>Signal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ticker, data in oslo_stocks.items() %}
-      <tr>
-        <td>{{ ticker }}</td>
-        <td>{{ data.name }}</td>
-        <td>
-          {% if data.last_price is defined and data.last_price is not none %}
-            {{ data.last_price|round(2) }}
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>
-          {% if data.change_percent is defined and data.change_percent is not none %}
-            {{ data.change_percent|round(2) }}%
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>{{ data.signal or 'N/A' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="container">
+    <h1 class="mb-4">Aksjeoversikt</h1>
 
-  <h2>Globale aksjer</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Ticker</th>
-        <th>Navn</th>
-        <th>Pris</th>
-        <th>Endring %</th>
-        <th>Signal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ticker, data in global_stocks.items() %}
-      <tr>
-        <td>{{ ticker }}</td>
-        <td>{{ data.name if data.name is defined else ticker }}</td>
-        <td>
-          {% if data.last_price is defined and data.last_price is not none %}
-            {{ data.last_price|round(2) }}
-          {% elif data.current_price is defined and data.current_price is not none %}
-            {{ data.current_price|round(2) }}
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>
-          {% if data.change_percent is defined and data.change_percent is not none %}
-            {{ data.change_percent|round(2) }}%
-          {% elif data.change is defined and data.change is not none %}
-            {{ data.change|round(2) }}%
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>{{ data.signal or 'N/A' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- Category Navigation -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body p-4 text-center">
+                    <h3 class="h5">Oslo Børs</h3>
+                    <p class="text-muted mb-3">Norske aksjer og indekser</p>
+                    <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-primary">Vis alle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3 mb-md-0">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body p-4 text-center">
+                    <h3 class="h5">Globale Markeder</h3>
+                    <p class="text-muted mb-3">Internasjonale aksjer</p>
+                    <a href="{{ url_for('stocks.global_list') }}" class="btn btn-primary">Vis alle</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow h-100">
+                <div class="card-body p-4 text-center">
+                    <h3 class="h5">Kryptovaluta</h3>
+                    <p class="text-muted mb-3">Bitcoin, Ethereum og mer</p>
+                    <a href="{{ url_for('stocks.crypto_list') }}" class="btn btn-primary">Vis alle</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <h2>Kryptovaluta</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Ticker</th>
-        <th>Navn</th>
-        <th>Pris</th>
-        <th>Endring %</th>
-        <th>Signal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for ticker, data in crypto.items() %}
-      <tr>
-        <td>{{ ticker }}</td>
-        <td>{{ data.name }}</td>
-        <td>
-          {% if data.last_price is defined and data.last_price is not none %}
-            {{ data.last_price|round(2) }}
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>
-          {% if data.change_percent is defined and data.change_percent is not none %}
-            {{ data.change_percent|round(2) }}%
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
-        <td>{{ data.signal or 'N/A' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- Oslo Børs Overview -->
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary bg-opacity-75 text-white d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Oslo Børs - Populære Aksjer</h2>
+            <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-sm btn-light">Vis alle</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Selskap</th>
+                            <th>Pris</th>
+                            <th>Endring %</th>
+                            <th>Signal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set counter = namespace(value=0) %}
+                        {% for ticker, stock in oslo_stocks.items() %}
+                            {% if counter.value < 5 %}
+                                <tr>
+                                    <td><strong>{{ ticker }}</strong></td>
+                                    <td>{{ stock.name if stock.name is defined else ticker }}</td>
+                                    <td>{{ stock.last_price }}</td>
+                                    <td>
+                                        <span class="{% if stock.change_percent is defined and stock.change_percent > 0 %}text-success{% elif stock.change_percent is defined and stock.change_percent < 0 %}text-danger{% endif %}">
+                                            {{ stock.change_percent|round(2) if stock.change_percent is defined else 'N/A' }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if stock.signal == 'BUY' %}bg-success{% elif stock.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ stock.signal if stock.signal is defined else 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-outline-primary">Detaljer</a>
+                                            {% if current_user.is_authenticated %}
+                                            <a href="{{ url_for('portfolio.quick_add_stock', ticker=ticker) }}" class="btn btn-outline-success">+ Portefølje</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% set counter.value = counter.value + 1 %}
+                            {% endif %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-3">Ingen data tilgjengelig</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-  <h2>Valuta</h2>
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Ticker</th>
-        <th>Navn</th>
-        <th>Siste pris</th>
-        <th>Endring %</th>
-        <th>Signal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% if currency and currency|length > 0 %}
-        {% for ticker, data in currency.items() %}
-        <tr>
-          <td>{{ ticker }}</td>
-          <td>{{ data.name }}</td>
-          <td>
-            {% if data.last_price is defined and data.last_price is not none %}
-              {{ data.last_price|round(4) }}
-            {% else %}
-              N/A
-            {% endif %}
-          </td>
-          <td>
-            {% if data.change_percent is defined and data.change_percent is not none %}
-              {{ data.change_percent|round(2) }}%
-            {% else %}
-              N/A
-            {% endif %}
-          </td>
-          <td>{{ data.signal or 'N/A' }}</td>
-        </tr>
-        {% endfor %}
-      {% else %}
-        <tr><td colspan="5">Ingen valutadata tilgjengelig.</td></tr>
-      {% endif %}
-    </tbody>
-  </table>
+    <!-- Global Markets Overview -->
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-success bg-opacity-75 text-white d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">Globale Markeder - Populære Aksjer</h2>
+            <a href="{{ url_for('stocks.global_list') }}" class="btn btn-sm btn-light">Vis alle</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Selskap</th>
+                            <th>Pris</th>
+                            <th>Endring %</th>
+                            <th>Signal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set counter = namespace(value=0) %}
+                        {% for ticker, stock in global_stocks.items() %}
+                            {% if counter.value < 5 %}
+                                <tr>
+                                    <td><strong>{{ ticker }}</strong></td>
+                                    <td>{{ stock.name if stock.name is defined else ticker }}</td>
+                                    <td>{{ stock.last_price }}</td>
+                                    <td>
+                                        <span class="{% if stock.change_percent is defined and stock.change_percent > 0 %}text-success{% elif stock.change_percent is defined and stock.change_percent < 0 %}text-danger{% endif %}">
+                                            {{ stock.change_percent|round(2) if stock.change_percent is defined else 'N/A' }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if stock.signal == 'BUY' %}bg-success{% elif stock.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ stock.signal if stock.signal is defined else 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-outline-primary">Detaljer</a>
+                                            {% if current_user.is_authenticated %}
+                                            <a href="{{ url_for('portfolio.quick_add_stock', ticker=ticker) }}" class="btn btn-outline-success">+ Portefølje</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% set counter.value = counter.value + 1 %}
+                            {% endif %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-3">Ingen data tilgjengelig</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Tool -->
+    <div class="card border-0 shadow mb-5">
+        <div class="card-body p-4">
+            <h3 class="h5 mb-3">Søk etter aksjer</h3>
+            <form action="{{ url_for('stocks.search') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" name="query" class="form-control" placeholder="Søk etter ticker eller selskap...">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Søk
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

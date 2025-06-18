@@ -84,6 +84,12 @@ def crypto_list():
     crypto = DataService.get_crypto_overview()
     return render_template('stocks/list.html', stocks=crypto, title="Cryptocurrencies")
 
+# Add this fallback route to handle the old URL pattern
+@stocks.route('/list')
+def list():
+    """Redirect to oslo_list as a fallback"""
+    return redirect(url_for('stocks.oslo_list'))
+
 @stocks.route('/compare')
 def compare():
     """Compare multiple stocks"""

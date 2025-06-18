@@ -1,141 +1,141 @@
 {% extends 'base.html' %}
-{% block title %}Kursprediksjon{% endblock %}
-{% block title %}Kursprediksjon{% endblock %}
-{% block content %}
-{% include 'analysis/_menu.html' %}
 
-<div class="container mt-4">
-  <h1>Kursprediksjon</h1>
-  
-  <div class="row mb-4">
-    <div class="col-lg-6">
-      <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-          <h2 class="h4 mb-0">Oslo Børs - Prediksjoner</h2>
+{% block title %}Prisprediksjoner | Aksjeradar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Prisprediksjoner</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-primary bg-opacity-75 text-white">
+                    <h2 class="h5 mb-0">Oslo Børs Aksjer</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Nåpris</th>
+                                    <th>Prediksjon</th>
+                                    <th>Endring %</th>
+                                    <th>Konfidens</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticker, pred in predictions_oslo.items() %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
+                                            <strong>{{ ticker }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>{{ pred.last_price }}</td>
+                                    <td>{{ pred.next_price }}</td>
+                                    <td>
+                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                            {{ pred.change_percent }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if pred.confidence == 'HIGH' %}bg-success{% elif pred.confidence == 'MEDIUM' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ pred.confidence }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">Ingen prediksjoner tilgjengelig</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover m-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Ticker</th>
-                  <th>Siste</th>
-                  <th>Neste</th>
-                  <th>Endring</th>
-                  <th>Trend</th>
-                  <th>Konfidens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ticker, prediction in predictions_oslo.items() %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                      <strong>{{ ticker }}</strong>
-                    </a>
-                  </td>
-                  <td>{{ prediction.last_price }}</td>
-                  <td>{{ prediction.next_price }}</td>
-                  <td class="{{ 'text-success' if prediction.change_percent > 0 else 'text-danger' }}">
-                    {{ prediction.change_percent }}%
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.trend == 'UP' else 'bg-danger' }}">
-                      {{ prediction.trend }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.confidence == 'HIGH' else 'bg-warning' if prediction.confidence == 'MEDIUM' else 'bg-danger' }}">
-                      {{ prediction.confidence }}
-                    </span>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow h-100">
+                <div class="card-header bg-success bg-opacity-75 text-white">
+                    <h2 class="h5 mb-0">Globale Aksjer</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Nåpris</th>
+                                    <th>Prediksjon</th>
+                                    <th>Endring %</th>
+                                    <th>Konfidens</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ticker, pred in predictions_global.items() %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
+                                            <strong>{{ ticker }}</strong>
+                                        </a>
+                                    </td>
+                                    <td>{{ pred.last_price }}</td>
+                                    <td>{{ pred.next_price }}</td>
+                                    <td>
+                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                            {{ pred.change_percent }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if pred.confidence == 'HIGH' %}bg-success{% elif pred.confidence == 'MEDIUM' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ pred.confidence }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">Ingen prediksjoner tilgjengelig</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
     
-    <div class="col-lg-6">
-      <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-          <h2 class="h4 mb-0">Globale Aksjer - Prediksjoner</h2>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover m-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Ticker</th>
-                  <th>Siste</th>
-                  <th>Neste</th>
-                  <th>Endring</th>
-                  <th>Trend</th>
-                  <th>Konfidens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ticker, prediction in predictions_global.items() %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                      <strong>{{ ticker }}</strong>
-                    </a>
-                  </td>
-                  <td>{{ prediction.last_price }}</td>
-                  <td>{{ prediction.next_price }}</td>
-                  <td class="{{ 'text-success' if prediction.change_percent > 0 else 'text-danger' }}">
-                    {{ prediction.change_percent }}%
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.trend == 'UP' else 'bg-danger' }}">
-                      {{ prediction.trend }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.confidence == 'HIGH' else 'bg-warning' if prediction.confidence == 'MEDIUM' else 'bg-danger' }}">
-                      {{ prediction.confidence }}
-                    </span>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="row">
-    <div class="col-12">
-      <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-          <h2 class="h4 mb-0">Detaljert Prediksjonsinformasjon</h2>
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary bg-gradient">
+            <h3 class="card-title h5 text-white mb-0">Om Prisprediksjoner</h3>
         </div>
         <div class="card-body">
-          <p class="mb-3">Velg en aksje fra tabellene ovenfor for å se detaljerte prediksjoner.</p>
-          
-          <div class="alert alert-info">
-            <h4 class="alert-heading">Om våre prediksjoner</h4>
-            <p>Våre kursprediksjoner er basert på avanserte algoritmer og maskinlæring som analyserer historiske data,Markedssentiment og tekniske indikatorer.</p>
-            <hr>
-            <p class="mb-0">Konfidensnivået indikerer vår algoritmes sikkerhet i prediksjonen - høyere konfidens betyr større sannsynlighet for at prediksjonen er korrekt.</p>
-          </div>
+            <p>Våre prisprediksjoner er basert på avanserte algoritmer som kombinerer teknisk analyse, markedstrender og maskinlæringsmodeller.</p>
+            <p><strong>Konfidensnivåer:</strong></p>
+            <ul>
+                <li><span class="badge bg-success">HIGH</span> - Modellen har høy konfidens i prediksjonen, basert på sterke signaler og konsistente mønstre.</li>
+                <li><span class="badge bg-warning">MEDIUM</span> - Modellen har moderat konfidens, prediksjonen er sannsynlig, men det er noen motstridende signaler.</li>
+                <li><span class="badge bg-secondary">LOW</span> - Modellen har lav konfidens, prediksjonene bør behandles med forsiktighet.</li>
+            </ul>
+            <div class="alert alert-info" role="alert">
+                <strong>Merk:</strong> Prediksjonene er kun ment som veiledende informasjon og ikke som investeringsråd. Aksjemarkedet er påvirket av mange faktorer som kan endre seg raskt.
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+    
+    <div class="d-flex justify-content-between mb-5">
+        <a href="{{ url_for('analysis.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Tilbake til analyse
+        </a>
+        <a href="{{ url_for('stocks.index') }}" class="btn btn-primary">
+            <i class="bi bi-graph-up"></i> Utforsk aksjer
+        </a>
+    </div>
 </div>
-
-<div class="container mt-4">
-  <h1>Kursprediksjon</h1>
-  
-  <div class="row mb-4">
-    <div class="col-lg-6">
-      <div class="card mb-4">
+{% endblock %}
         <div class="card-header bg-primary text-white">
           <h2 class="h4 mb-0">Oslo Børs - Prediksjoner</h2>
         </div>
