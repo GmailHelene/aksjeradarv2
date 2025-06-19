@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>App Settings</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="app_mode" class="form-label">App Mode</label>
+                        <select class="form-select" id="app_mode" name="app_mode">
+                            <option value="DEFAULT" {% if app_mode == 'DEFAULT' %}selected{% endif %}>Default</option>
+                            <option value="ADHD_FRIENDLY" {% if app_mode == 'ADHD_FRIENDLY' %}selected{% endif %}>ADHD-Friendly</option>
+                            <option value="SILENT" {% if app_mode == 'SILENT' %}selected{% endif %}>Silent Mode</option>
+                            <option value="FOCUS" {% if app_mode == 'FOCUS' %}selected{% endif %}>Focus Mode</option>
+                            <option value="DARK" {% if app_mode == 'DARK' %}selected{% endif %}>Dark Mode</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h4>App Mode Features</h4>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5>Default</h5>
+                                <p>Standard interface with all features enabled.</p>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5>ADHD-Friendly</h5>
+                                <p>High contrast, simplified UI, visual cues, and reduced distractions.</p>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5>Silent Mode</h5>
+                                <p>Disables sounds, vibrations and intrusive notifications.</p>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5>Focus Mode</h5>
+                                <p>Simplified interface that shows only essential information to help maintain focus.</p>
+                            </div>
+                        </div>
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h5>Dark Mode</h5>
+                                <p>Dark color scheme that's easier on the eyes in low-light environments.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+  "demo-user-1": {
+    "username": "demo1@test.com",
+    "email": "demo1@test.com",
+    "password_hash": "scrypt:32768:8:1$example1$hash1",
+    "created": "2024-01-01T10:00:00"
+  },
+  "demo-user-2": {
+    "username": "demo2@test.com", 
+    "email": "demo2@test.com",
+    "password_hash": "scrypt:32768:8:1$example2$hash2",
+    "created": "2024-01-01T10:00:00"
+  }
+}
