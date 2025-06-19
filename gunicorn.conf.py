@@ -27,7 +27,27 @@ proc_name = 'aksjeradar'
 
 # Server hooks
 def on_starting(server):
+    import sys
+    import os
+    # Ensure the app directory is in the Python path
+    app_dir = os.getcwd()
+    if app_dir not in sys.path:
+        sys.path.insert(0, app_dir)
     server.log.info("Starting Aksjeradar application")
+    server.log.info(f"Current directory: {app_dir}")
+    server.log.info(f"Python path: {sys.path}")
+    
+    # Check if migrations directory exists
+    migrations_dir = os.path.join(app_dir, 'migrations')
+    if os.path.exists(migrations_dir):
+        server.log.info(f"Migrations directory found at: {migrations_dir}")
+        env_py = os.path.join(migrations_dir, 'env.py')
+        if os.path.exists(env_py):
+            server.log.info(f"env.py found at: {env_py}")
+        else:
+            server.log.error(f"env.py NOT found at: {env_py}")
+    else:
+        server.log.error(f"Migrations directory NOT found at: {migrations_dir}")
 
 def post_fork(server, worker):
     server.log.info(f"Worker spawned (pid: {worker.pid})")

@@ -1,1 +1,1 @@
-web: PYTHONPATH=/app python -m flask db upgrade && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app
+web: PYTHONPATH=/app python check_paths.py > path_debug.log && python check_migrations.py > migrations_debug.log && python init_db_fixed.py && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app
