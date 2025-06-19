@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+
+{% block title %}Sammenlign aksjer | Aksjeradar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="my-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Hjem</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('stocks.index') }}">Aksjer</a></li>
+            <li class="breadcrumb-item active">Sammenlign aksjer</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0">Sammenlign aksjer</h2>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('stocks.compare') }}" method="get" id="compareForm">
+                <div class="row mb-3">
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label for="ticker1" class="form-label">Aksje 1:</label>
+                        <input type="text" class="form-control" id="ticker1" name="tickers" value="{{ tickers[0] if tickers and tickers|length > 0 else 'EQNR.OL' }}" placeholder="f.eks. EQNR.OL" required>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label for="ticker2" class="form-label">Aksje 2:</label>
+                        <input type="text" class="form-control" id="ticker2" name="tickers" value="{{ tickers[1] if tickers and tickers|length > 1 else 'DNB.OL' }}" placeholder="f.eks. DNB.OL" required>
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label for="ticker3" class="form-label">Aksje 3 (valgfri):</label>
+                        <input type="text" class="form-control" id="ticker3" name="tickers" value="{{ tickers[2] if tickers and tickers|length > 2 else '' }}" placeholder="f.eks. TEL.OL">
+                    </div>
+                    <div class="col-md-3 mb-3 mb-md-0">
+                        <label for="ticker4" class="form-label">Aksje 4 (valgfri):</label>
+                        <input type="text" class="form-control" id="ticker4" name="tickers" value="{{ tickers[3] if tickers and tickers|length > 3 else '' }}" placeholder="f.eks. AAPL">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="period" class="form-label">Periode:</label>
+                        <select class="form-select" id="period" name="period">
+                            <option value="1mo" {% if period == '1mo' %}selected{% endif %}>1 måned</option>
+                            <option value="3mo" {% if period == '3mo' %}selected{% endif %}>3 måneder</option>
+                            <option value="6mo" {% if period == '6mo' or not period %}selected{% endif %}>6 måneder</option>
+                            <option value="1y" {% if period == '1y' %}selected{% endif %}>1 år</option>
+                            <option value="2y" {% if period == '2y' %}selected{% endif %}>2 år</option>
+                            <option value="5y" {% if period == '5y' %}selected{% endif %}>5 år</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="interval" class="form-label">Intervall:</label>
+                        <select class="form-select" id="interval" name="interval">
+                            <option value="1d" {% if interval == '1d' or not interval %}selected{% endif %}>Daglig</option>
+                            <option value="1wk" {% if interval == '1wk' %}selected{% endif %}>Ukentlig</option>
+                            <option value="1mo" {% if interval == '1mo' %}selected{% endif %}>Månedlig</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <label for="normalize" class="form-label">Normalisering:</label>
+                        <select class="form-select" id="normalize" name="normalize">
+                            <option value="1" {% if normalize == '1' or normalize == True %}selected{% endif %}>Normaliser til prosent</option>
+                            <option value="0" {% if normalize == '0' or normalize == False %}selected{% endif %}>Vis faktiske priser</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">Sammenlign</button>
+                    <button type="button" class="btn btn-outline-secondary" id="resetForm">Tilbakestill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if tickers and tickers|length > 0 %}
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Sammenligning av {{ tickers|join(', ') }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="position: relative; height:60vh; width:100%">
+                <canvas id="priceChart"></canvas>
+            </div>
+            
+            <div class="chart-container mt-4" style="position: relative; height:30vh; width:100%">
+                <canvas id="volumeChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Nøkkeltall</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Selskap</th>
+                            <th>Dagens kurs</th>
+                            <th>Endring (periode)</th>
+                            <th>Volatilitet</th>
+                            <th>Volum (snitt)</th>
+                            <th>Korrelasjon</th>
+                            <th>Beta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticker in tickers %}
+                        <tr>
+                            <td><a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">{{ ticker }}</a></td>
+                            <td>{{ ticker_names.get(ticker, ticker) }}</td>
+                            <td>{{ "%.2f"|format(current_prices.get(ticker, 0)) }}</td>
+                            <td class="{% if price_changes.get(ticker, 0) > 0 %}text-success{% elif price_changes.get(ticker, 0) < 0 %}text-danger{% endif %}">
+                                {{ "%.2f"|format(price_changes.get(ticker, 0)) }}%
+                            </td>
+                            <td>{{ "%.2f"|format(volatility.get(ticker, 0)) }}%</td>
+                            <td>{{ '{:,.0f}'.format(volumes.get(ticker, 0)) }}</td>
+                            <td>{{ "%.2f"|format(correlations.get(ticker, {}).get(tickers[0], 1.0)) }}</td>
+                            <td>{{ "%.2f"|format(betas.get(ticker, 1.0)) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="h5 mb-0">Tekniske indikatorer</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>RSI (14)</th>
+                            <th>MACD</th>
+                            <th>Signal</th>
+                            <th>Bollinger Bands</th>
+                            <th>200 SMA</th>
+                            <th>50 SMA</th>
+                            <th>Vurdering</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticker in tickers %}
+                        <tr>
+                            <td><a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">{{ ticker }}</a></td>
+                            <td>
+                                <span class="badge {% if rsi.get(ticker, 50) > 70 %}bg-danger{% elif rsi.get(ticker, 50) < 30 %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ "%.1f"|format(rsi.get(ticker, 50)) }}
+                                </span>
+                            </td>
+                            <td>{{ "%.2f"|format(macd.get(ticker, {}).get('macd', 0)) }}</td>
+                            <td>{{ "%.2f"|format(macd.get(ticker, {}).get('signal', 0)) }}</td>
+                            <td>
+                                {% if bb.get(ticker, {}).get('position') == 'upper' %}
+                                <span class="badge bg-danger">Upper Band</span>
+                                {% elif bb.get(ticker, {}).get('position') == 'lower' %}
+                                <span class="badge bg-success">Lower Band</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Middle</span>
+                                {% endif %}
+                            </td>
+                            <td class="{% if sma200.get(ticker, 0) > 0 %}text-success{% elif sma200.get(ticker, 0) < 0 %}text-danger{% endif %}">
+                                {{ "%.2f"|format(sma200.get(ticker, 0)) }}%
+                            </td>
+                            <td class="{% if sma50.get(ticker, 0) > 0 %}text-success{% elif sma50.get(ticker, 0) < 0 %}text-danger{% endif %}">
+                                {{ "%.2f"|format(sma50.get(ticker, 0)) }}%
+                            </td>
+                            <td>
+                                <span class="badge {% if signals.get(ticker) == 'BUY' %}bg-success{% elif signals.get(ticker) == 'SELL' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ signals.get(ticker, 'HOLD') }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize form handling
+        const form = document.getElementById('compareForm');
+        const resetButton = document.getElementById('resetForm');
+        
+        resetButton.addEventListener('click', function() {
+            document.getElementById('ticker1').value = 'EQNR.OL';
+            document.getElementById('ticker2').value = 'DNB.OL';
+            document.getElementById('ticker3').value = '';
+            document.getElementById('ticker4').value = '';
+            document.getElementById('period').value = '6mo';
+            document.getElementById('interval').value = '1d';
+            document.getElementById('normalize').value = '1';
+        });
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect all ticker inputs
+            const tickers = Array.from(form.querySelectorAll('input[name="tickers"]'))
+                .map(input => input.value.trim())
+                .filter(value => value !== '');
+                
+            if (tickers.length < 2) {
+                alert('Du må angi minst to aksjer for å sammenligne.');
+                return;
+            }
+            
+            // Construct URL with tickers
+            const period = document.getElementById('period').value;
+            const interval = document.getElementById('interval').value;
+            const normalize = document.getElementById('normalize').value;
+            
+            const url = `{{ url_for('stocks.compare') }}?tickers=${tickers.join(',')}&period=${period}&interval=${interval}&normalize=${normalize}`;
+            
+            window.location.href = url;
+        });
+        
+        {% if tickers and tickers|length > 0 and chart_data %}
+        // Create price chart
+        const priceCtx = document.getElementById('priceChart').getContext('2d');
+        const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+        
+        // Prepare datasets for price chart
+        const priceDatasets = [];
+        const volumeDatasets = [];
+        const colors = ['#0d6efd', '#dc3545', '#198754', '#6f42c1', '#fd7e14'];
+        
+        {% for ticker in tickers %}
+        if ('{{ ticker }}' in {{ chart_data|tojson }}) {
+            const tickerData = {{ chart_data|tojson }}['{{ ticker }}'];
+            
+            // Price dataset
+            priceDatasets.push({
+                label: '{{ ticker }}',
+                data: tickerData.map(d => ({x: d.date, y: d.close})),
+                borderColor: colors[{{ loop.index0 }} % colors.length],
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                tension: 0.1,
+                pointRadius: 0,
+                pointHoverRadius: 5
+            });
+            
+            // Volume dataset
+            volumeDatasets.push({
+                label: '{{ ticker }} Volume',
+                data: tickerData.map(d => ({x: d.date, y: d.volume})),
+                backgroundColor: colors[{{ loop.index0 }} % colors.length],
+                borderColor: colors[{{ loop.index0 }} % colors.length],
+                borderWidth: 1,
+                type: 'bar'
+            });
+        }
+        {% endfor %}
+        
+        // Create price chart
+        const priceChart = new Chart(priceCtx, {
+            type: 'line',
+            data: {
+                datasets: priceDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: '{{ 'day' if interval == '1d' else 'week' if interval == '1wk' else 'month' }}',
+                            tooltipFormat: 'dd.MM.yyyy'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Dato'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '{{ 'Normalisert pris (%)' if normalize else 'Pris' }}'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Prissammenligning'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                return `${label}: ${value.toFixed(2)}{{ ' %' if normalize else '' }}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Create volume chart
+        const volumeChart = new Chart(volumeCtx, {
+            type: 'bar',
+            data: {
+                datasets: volumeDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: '{{ 'day' if interval == '1d' else 'week' if interval == '1wk' else 'month' }}',
+                            tooltipFormat: 'dd.MM.yyyy'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Dato'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Volum'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Volumsammenligning'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                return `${label}: ${new Intl.NumberFormat().format(value)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

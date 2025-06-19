@@ -7,16 +7,30 @@
     <div class="row">
         <div class="col-md-8 mx-auto">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-dark text-white">
                     <h3 class="mb-0">Aksjeradar - Versjonsinformasjon</h3>
                 </div>
                 <div class="card-body">
                     <h4>Versjon</h4>
-                    <pre class="bg-light p-3 rounded">{{ debug_info.app_version }}</pre>
+                    <pre class="bg-light p-3 rounded">{{ version_info }}</pre>
+                    
+                    <div class="alert alert-info">
+                        <h5>Nye funksjoner i denne versjonen:</h5>
+                        <ul>
+                            <li>Fikset visningen av /analysis/ai siden</li>
+                            <li>Fikset /portfolio/tips siden</li>
+                            <li>Fikset /stocks/compare siden</li>
+                            <li>Økt antall aksjer som vises fra Oslo Børs</li>
+                            <li>Forbedret stilsetting av navigasjonsfelt og bunn</li>
+                            <li>Redesignet heroseksjonen på forsiden for bedre lesbarhet</li>
+                            <li>Lagt til automatisk cache-oppdatering ved nye versjoner</li>
+                        </ul>
+                    </div>
                     
                     <h4 class="mt-4">Systemdetaljer</h4>
                     <table class="table table-striped">
                         <tbody>
+                            {% if debug_info %}
                             <tr>
                                 <th>Sist oppdatert</th>
                                 <td>{{ debug_info.deployed_time }}</td>
@@ -41,13 +55,64 @@
                                 <th>Cache-innstilling</th>
                                 <td>{{ debug_info.cache_setting }}</td>
                             </tr>
+                            {% else %}
+                            <tr>
+                                <th>Sist oppdatert</th>
+                                <td>{{ '%d.%m.%Y %H:%M'|now }}</td>
+                            </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                     
-                    <h4 class="mt-4">Aktuelle tidsstempler</h4>
-                    <table class="table table-striped">
-                        <tbody>
-                            <tr>
+                    <h4 class="mt-4">Tøm hurtiglager (cache)</h4>
+                    <p>Hvis du ikke ser de siste endringene, kan det hjelpe å tømme nettleserens hurtiglager:</p>
+                    <ol>
+                        <li>Åpne nettleserens utviklerverktøy (F12)</li>
+                        <li>Gå til "Application" eller "Applikasjon"-fanen</li>
+                        <li>Velg "Clear Storage" eller "Tøm lagring" i sidepanelet</li>
+                        <li>Klikk på "Clear site data" eller "Tøm nettsteddata"</li>
+                        <li>Oppdater siden</li>
+                    </ol>
+                    <button class="btn btn-primary mt-3" id="clearCacheBtn">Tøm hurtiglager og oppdater siden</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const clearCacheBtn = document.getElementById('clearCacheBtn');
+        if (clearCacheBtn) {
+            clearCacheBtn.addEventListener('click', function() {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear caches if possible
+                if ('caches' in window) {
+                    caches.keys().then(cacheNames => {
+                        return Promise.all(
+                            cacheNames.map(cacheName => {
+                                if (cacheName.startsWith('aksjeradar-cache')) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    }).then(() => {
+                        console.log('Caches cleared successfully');
+                        // Hard reload
+                        window.location.reload(true);
+                    });
+                } else {
+                    window.location.reload(true);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
                                 <th>Nåværende tid (server)</th>
                                 <td>{{ '%Y-%m-%d %H:%M:%S'|now }}</td>
                             </tr>

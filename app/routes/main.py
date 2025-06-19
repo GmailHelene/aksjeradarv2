@@ -225,30 +225,29 @@ def service_worker():
 
 @main.route('/version')
 def version():
-    """Return version information for debugging"""
-    try:
-        # Try to read the version file
-        version_path = os.path.join(current_app.static_folder, 'version.txt')
-        version_info = "Version file not found"
-        
-        if os.path.exists(version_path):
-            with open(version_path, 'r') as f:
+    """Display version information"""
+    version_file = os.path.join(current_app.static_folder, 'version.txt')
+    version_info = "Version information not available"
+    
+    if os.path.exists(version_file):
+        try:
+            with open(version_file, 'r') as f:
                 version_info = f.read()
-        
-        # Collect some system information
+        except Exception as e:
+            current_app.logger.error(f"Error reading version file: {str(e)}")
+    
+    # Collect debug info if available
+    debug_info = None
+    try:
         debug_info = {
-            'app_version': version_info,
             'deployed_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'flask_env': os.environ.get('FLASK_ENV', 'not set'),
-            'database_url': current_app.config.get('SQLALCHEMY_DATABASE_URI', 'not set').split('@')[-1] if '@' in current_app.config.get('SQLALCHEMY_DATABASE_URI', '') else 'sqlite',
+            'flask_env': os.environ.get('FLASK_ENV', 'production'),
+            'database_url': current_app.config.get('SQLALCHEMY_DATABASE_URI', 'Not available'),
             'static_folder': current_app.static_folder,
             'template_folder': current_app.template_folder,
-            'cache_setting': current_app.config.get('SEND_FILE_MAX_AGE_DEFAULT', 'not set')
+            'cache_setting': current_app.config.get('SEND_FILE_MAX_AGE_DEFAULT', 'Default')
         }
-        
-        return render_template('version.html', debug_info=debug_info)
     except Exception as e:
-        return jsonify({
-            'error': f"Error getting version info: {str(e)}",
-            'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
+        current_app.logger.error(f"Error collecting debug info: {str(e)}")
+    
+    return render_template('version.html', version_info=version_info, debug_info=debug_info)

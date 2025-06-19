@@ -269,55 +269,58 @@ def add_to_watchlist(id):
 
 @portfolio.route('/tips')
 def stock_tips():
-    """Show stock tips"""
-    tips = StockTip.query.order_by(StockTip.created_at.desc()).limit(10).all()
-    if not tips:
-        # Create demo tips when no real tips exist
-        demo_tips = [
-            {
-                'id': 1,
-                'ticker': 'EQNR.OL',
-                'tip_type': 'BUY',
-                'confidence': 'HIGH',
-                'analysis': 'Equinor viser sterk teknisk utvikling og posisjonert for vekst med høye oljepriser. Selskapet har solid kontantstrøm og attraktiv utbyttepolitikk.',
-                'created_at': datetime.now() - timedelta(days=2)
-            },
-            {
-                'id': 2,
-                'ticker': 'DNB.OL',
-                'tip_type': 'HOLD',
-                'confidence': 'MEDIUM',
-                'analysis': 'DNB viser stabil inntjening, men står overfor utfordringer med rentemiljøet. Aksjen er relativt rettferdig priset på nåværende nivå.',
-                'created_at': datetime.now() - timedelta(days=3)
-            },
-            {
-                'id': 3,
-                'ticker': 'MSFT',
-                'tip_type': 'BUY',
-                'confidence': 'HIGH',
-                'analysis': 'Microsoft fortsetter å vise sterk vekst i skytjenester og AI-satsinger. Selskapet er godt posisjonert for fremtidig vekst.',
-                'created_at': datetime.now() - timedelta(days=4)
-            },
-            {
-                'id': 4,
-                'ticker': 'TSLA',
-                'tip_type': 'SELL',
-                'confidence': 'MEDIUM',
-                'analysis': 'Tesla står overfor økende konkurranse og marginer under press. Verdsettelsen fremstår som høy gitt usikkerheten.',
-                'created_at': datetime.now() - timedelta(days=5)
-            },
-            {
-                'id': 5,
-                'ticker': 'AAPL',
-                'tip_type': 'HOLD',
-                'confidence': 'MEDIUM',
-                'analysis': 'Apple viser solid inntjening, men mangler tydelige vekstdrivere på kort sikt. Aksjen er relativt rettferdig priset.',
-                'created_at': datetime.now() - timedelta(days=6)
-            }
-        ]
-        return render_template('portfolio/tips.html', tips=demo_tips, demo_mode=True)
-    
-    return render_template('portfolio/tips.html', tips=tips, demo_mode=False)
+    """Show stock tips for the user"""
+    try:
+        # Get stock tips
+        all_tips = StockTip.query.order_by(StockTip.created_at.desc()).limit(10).all()
+        
+        # If there are no tips, create some demo tips
+        if not all_tips:
+            demo_tips = [
+                {
+                    'ticker': 'EQNR.OL',
+                    'tip_type': 'BUY',
+                    'confidence': 'HIGH',
+                    'analysis': 'Equinor viser sterk teknisk styrke med RSI over 60 og MACD i positiv trend. Oljeprisen er stabil over $80 per fat, noe som støtter driften.',
+                    'created_at': datetime.now()
+                },
+                {
+                    'ticker': 'DNB.OL',
+                    'tip_type': 'BUY',
+                    'confidence': 'MEDIUM',
+                    'analysis': 'DNB viser solid inntjeningsvekst og teknisk analyse indikerer et gjennombrudd over motstandsnivået på 210 NOK.',
+                    'created_at': datetime.now() - timedelta(days=1)
+                },
+                {
+                    'ticker': 'AAPL',
+                    'tip_type': 'BUY',
+                    'confidence': 'HIGH',
+                    'analysis': 'Apple har sterk teknisk støtte og lansering av nye produkter forventes å drive inntektsvekst i kommende kvartal.',
+                    'created_at': datetime.now() - timedelta(days=2)
+                },
+                {
+                    'ticker': 'TSLA',
+                    'tip_type': 'HOLD',
+                    'confidence': 'MEDIUM',
+                    'analysis': 'Tesla viser blandede signaler. Veksten fortsetter, men verdsettelsen er høy og konkurransen tiltar i EV-sektoren.',
+                    'created_at': datetime.now() - timedelta(days=3)
+                },
+                {
+                    'ticker': 'TEL.OL',
+                    'tip_type': 'SELL',
+                    'confidence': 'MEDIUM',
+                    'analysis': 'Telenor viser svake tekniske signaler med RSI under 40 og fallende volum. Konkurransen i telekom-sektoren presser marginene.',
+                    'created_at': datetime.now() - timedelta(days=4)
+                }
+            ]
+            
+            # Use demo tips instead of database tips
+            return render_template('portfolio/tips.html', tips=demo_tips, demo_mode=True)
+            
+        return render_template('portfolio/tips.html', tips=all_tips, demo_mode=False)
+    except Exception as e:
+        print(f"Error in stock tips route: {str(e)}")
+        return render_template('error.html', error=f"Det oppstod en feil: {str(e)}")
 
 @portfolio.route('/tips/add', methods=['GET', 'POST'])
 @login_required
