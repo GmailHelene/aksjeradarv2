@@ -194,10 +194,10 @@
             <hr class="my-3 border-secondary">
             <div class="row align-items-center">
                 <div class="col-md-6 small">
-                    <p class="mb-0 text-white-50">&copy; {% now '%Y' %} Aksjeradar. Alle rettigheter reservert.</p>
+                    <p class="mb-0 text-white-50">&copy; {{ '%Y'|now }} Aksjeradar. Alle rettigheter reservert.</p>
                 </div>
                 <div class="col-md-6 text-md-end small">
-                    <p class="mb-0 text-white-50">Datakilder: Yahoo Finance, Oslo Børs | Oppdatert: {% now '%d.%m.%Y' %}</p>
+                    <p class="mb-0 text-white-50">Datakilder: Yahoo Finance, Oslo Børs | Oppdatert: {{ '%d.%m.%Y'|now }}</p>
                 </div>
             </div>
         </div>
