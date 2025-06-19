@@ -251,3 +251,13 @@ def version():
         current_app.logger.error(f"Error collecting debug info: {str(e)}")
     
     return render_template('version.html', version_info=version_info, debug_info=debug_info)
+
+@main.route('/privacy')
+def privacy():
+    """Display privacy policy"""
+    return render_template('privacy.html')
+
+@main.route('/privacy-policy')
+def privacy_policy():
+    """Return static privacy policy HTML file (for Google Play)"""
+    return current_app.send_static_file('privacy_policy.html')
