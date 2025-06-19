@@ -17,6 +17,14 @@ if [ ! -f "app/aksjeradar.db" ]; then
     python init_db_direct.py
 fi
 
+# Verify privacy policy files
+echo "Verifying privacy policy files..."
+if [ -f "app/templates/privacy.html" ] && [ -f "app/static/privacy_policy.html" ]; then
+    echo "Privacy policy files found."
+else
+    echo "WARNING: Privacy policy files are missing! Required for app stores."
+fi
+
 # Test the application
 echo "Testing the application..."
 echo "Run: FLASK_APP=run.py FLASK_DEBUG=1 python -m flask run"
