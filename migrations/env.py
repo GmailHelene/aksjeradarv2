@@ -1,23 +1,13 @@
-"""
-Alembic environment configuration file.
-This file defines how database migrations are run.
-"""
 from __future__ import with_statement
-
-import logging
-from logging.config import fileConfig
-
 from alembic import context
-from flask import current_app
+from sqlalchemy import engine_from_config, pool
+from logging.config import fileConfig
+import logging
+import os
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-try:
-    config = context.config
-except AttributeError:
-    # For newer versions of alembic
-    from alembic.config import Config
-    config = Config("migrations/alembic.ini")
+config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -26,19 +16,10 @@ logger = logging.getLogger('alembic.env')
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-config.set_main_option(
-    'sqlalchemy.url',
-    str(current_app.extensions['migrate'].db.get_engine().url).replace(
-        '%', '%%'))
+from flask import current_app
+config.set_main_option('sqlalchemy.url',
+                      current_app.config.get('SQLALCHEMY_DATABASE_URI'))
 target_metadata = current_app.extensions['migrate'].db.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
-
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -60,7 +41,6 @@ def run_migrations_offline():
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online():
     """Run migrations in 'online' mode.
 
@@ -68,7 +48,6 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-
     # this callback is used to prevent an auto-migration from being generated
     # when there are no changes to the schema
     # reference: http://alembic.zzzcomputing.com/en/latest/cookbook.html
@@ -79,19 +58,21 @@ def run_migrations_online():
                 directives[:] = []
                 logger.info('No changes in schema detected.')
 
-    connectable = current_app.extensions['migrate'].db.get_engine()
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix='sqlalchemy.',
+        poolclass=pool.NullPool,
+    )
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            process_revision_directives=process_revision_directives,
-            **current_app.extensions['migrate'].configure_args
+            process_revision_directives=process_revision_directives
         )
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
