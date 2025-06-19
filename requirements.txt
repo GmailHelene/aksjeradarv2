@@ -18,3 +18,4 @@ python-dateutil
 alembic
 setuptools
 importlib-metadata
+stripe>=2.60.0

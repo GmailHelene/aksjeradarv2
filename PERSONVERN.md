@@ -76,7 +76,7 @@ Avhengig av hvor du bor, kan du ha visse rettigheter knyttet til dine personoppl
 - Rett til å motsette deg behandling av dine data
 - Rett til dataportabilitet
 
-For å utøve disse rettighetene, vennligst kontakt oss på [kontakt@aksjeradar.no].
+For å utøve disse rettighetene, vennligst kontakt oss på [kontakt@aksjeradar.trade].
 
 ## Oppbevaring av data
 
@@ -90,5 +90,5 @@ Vi kan oppdatere denne personvernerklæringen fra tid til annen. Når vi gjør d
 
 Hvis du har spørsmål om denne personvernerklæringen eller våre datapraksis, vennligst kontakt oss på:
 
-**E-post:** [kontakt@aksjeradar.no]
+**E-post:** [kontakt@aksjeradar.trade]
 **Nettside:** [www.aksjeradar.no/kontakt]
