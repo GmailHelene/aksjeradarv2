@@ -4,7 +4,7 @@
     "buildCommand": "pip install -r requirements.txt && pip install -e ."
   },
   "deploy": {
-    "startCommand": "PYTHONPATH=/app mkdir -p logs && mkdir -p migrations && cp -r /app/migrations/* migrations/ && cp migrations/env.py.new migrations/env.py && python check_paths.py > path_debug.log && python check_migrations.py > migrations_debug.log && python init_db_direct.py && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app",
+    "startCommand": "PYTHONPATH=/app mkdir -p logs && mkdir -p migrations && cp -f migrations/env.py.new migrations/env.py && python check_paths.py > path_debug.log && python check_migrations.py > migrations_debug.log && python init_db_direct.py && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
