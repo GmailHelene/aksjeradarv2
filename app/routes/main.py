@@ -11,6 +11,40 @@ from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
 
+def init_stripe():
+    """Initialize Stripe with error handling"""
+    try:
+        stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
+        # Test the connection by making a simple API call
+        stripe.Price.list(limit=1)
+        current_app.logger.info('Stripe initialized successfully')
+    except stripe.error.AuthenticationError as e:
+        current_app.logger.error(f'Stripe authentication failed: {str(e)}')
+        raise
+    except Exception as e:
+        current_app.logger.error(f'Stripe initialization failed: {str(e)}')
+        raise
+
+# Initialize Stripe when the blueprint is registered
+@main.record_once
+def on_register(state):
+    try:
+        # Check if we're in development mode
+        is_dev = state.app.config.get('FLASK_ENV') != 'production'
+        
+        # Set Stripe API key
+        stripe.api_key = state.app.config['STRIPE_SECRET_KEY']
+        
+        # Only test the connection in production
+        if not is_dev:
+            # Test the connection by making a simple API call
+            stripe.Price.list(limit=1)
+            state.app.logger.info('Stripe initialized successfully')
+        else:
+            state.app.logger.info('Stripe initialized in development mode (no API calls)')
+    except Exception as e:
+        state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
+
 @main.route('/')
 def index():
     market_overview = {}
@@ -79,20 +113,60 @@ def logout():
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # Log registration attempt with form data
+        current_app.logger.info(f'Registration attempt with data: {request.form}')
+        
         username = request.form.get('username')
         password = request.form.get('password')
+        email = request.form.get('email')
+        
+        # Log extracted data
+        current_app.logger.info(f'Extracted data: username={username}, email={email}, password_length={len(password) if password else 0}')
+        
+        # Validate input
         if not username or not password:
-            flash('Username and password required', 'danger')
+            flash('Brukernavn og passord er påkrevd', 'danger')
             return redirect(url_for('main.register'))
+        
+        # Allow email to be optional for backward compatibility
+        
+        # Check if username already exists
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'danger')
+            flash('Brukernavnet er allerede i bruk', 'danger')
             return redirect(url_for('main.register'))
-        user = User(username=username)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful! Please log in.', 'success')
-        return redirect(url_for('main.login'))
+        
+        # Check if email already exists (if provided)
+        if email and User.query.filter_by(email=email).first():
+            flash('E-postadressen er allerede i bruk', 'danger')
+            return redirect(url_for('main.register'))
+        
+        try:
+            # Create user
+            user = User(username=username, email=email or f"{username}@example.com")
+            user.set_password(password)
+            
+            # Start free trial
+            user.start_free_trial()
+            
+            # Save to database
+            db.session.add(user)
+            db.session.commit()
+            
+            # Log success
+            current_app.logger.info(f'New user registered: {username}')
+            
+            # Login the user
+            login_user(user)
+            flash('Registrering vellykket! Velkommen til Aksjeradar.', 'success')
+            
+            return redirect(url_for('main.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Registration failed for {username}: {str(e)}')
+            flash('Beklager, det oppstod en feil under registreringen. Prøv igjen.', 'danger')
+            return redirect(url_for('main.register'))
+            
     return render_template('register.html')
 
 @main.route('/share-target')
@@ -331,234 +405,165 @@ def purchase_subscription():
 @main.route('/create-checkout-session', methods=['POST'])
 @login_required
 def create_checkout_session():
-    """Oppretter en Stripe Checkout-sesjon for abonnement"""
+    """Create a Stripe checkout session for subscription purchase"""
     subscription_type = request.form.get('subscription_type')
-    
-    # Initialiser Stripe API-nøkkel
-    stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
-    
-    # Velg riktig pris-ID basert på abonnementstype
+    if not subscription_type:
+        return jsonify({'error': 'No subscription type provided'}), 400
+
+    price_id = None
     if subscription_type == 'monthly':
         price_id = current_app.config['STRIPE_MONTHLY_PRICE_ID']
-        mode = 'subscription'
     elif subscription_type == 'yearly':
         price_id = current_app.config['STRIPE_YEARLY_PRICE_ID']
-        mode = 'subscription'
     elif subscription_type == 'lifetime':
         price_id = current_app.config['STRIPE_LIFETIME_PRICE_ID']
-        mode = 'payment'
     else:
-        flash('Ugyldig abonnementstype', 'danger')
-        return redirect(url_for('main.subscription'))        # Opprett Checkout-sesjon
+        return jsonify({'error': 'Invalid subscription type'}), 400
+
     try:
-        # Check if user already has a Stripe customer ID
-        if current_user.stripe_customer_id:
-            customer_id = current_user.stripe_customer_id
-        elif current_user.email:
-            # Create a new customer
+        # Create or retrieve Stripe customer
+        if not current_user.stripe_customer_id:
             customer = stripe.Customer.create(
                 email=current_user.email,
-                name=current_user.username,
-                metadata={
-                    'user_id': str(current_user.id)
-                }
+                metadata={'user_id': current_user.id}
             )
-            customer_id = customer.id
-            # Save the customer ID to the user
-            current_user.stripe_customer_id = customer_id
+            current_user.stripe_customer_id = customer.id
             db.session.commit()
-        else:
-            customer_id = None
-            
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer_id,
-            customer_email=None if customer_id else current_user.email,
-            client_reference_id=str(current_user.id),
+        
+        # Create checkout session
+        session = stripe.checkout.Session.create(
+            customer=current_user.stripe_customer_id,
             payment_method_types=['card'],
             line_items=[{
                 'price': price_id,
                 'quantity': 1,
             }],
-            mode=mode,
-            success_url=request.host_url + 'payment/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=request.host_url + 'subscription',
+            mode='subscription',
+            success_url=request.host_url.rstrip('/') + url_for('main.payment_success'),
+            cancel_url=request.host_url.rstrip('/') + url_for('main.subscription'),
             metadata={
                 'user_id': current_user.id,
                 'subscription_type': subscription_type
             }
         )
-        return redirect(checkout_session.url, code=303)
+        
+        return jsonify({'sessionId': session.id})
     except Exception as e:
-        current_app.logger.error(f"Stripe error: {str(e)}")
-        flash(f'Det oppstod en feil: {str(e)}', 'danger')
-        return redirect(url_for('main.subscription'))
+        current_app.logger.error(f'Failed to create checkout session: {str(e)}')
+        return jsonify({'error': 'Failed to create checkout session'}), 500
 
 @main.route('/payment/success')
 @login_required
 def payment_success():
-    """Håndterer vellykket betaling"""
-    session_id = request.args.get('session_id')
-    if not session_id:
-        return redirect(url_for('main.subscription'))
-    
-    try:
-        # Initialiser Stripe API-nøkkel
-        stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
-          # Hent Checkout-sesjonen for å bekrefte betaling
-        checkout_session = stripe.checkout.Session.retrieve(session_id)
-        
-        # Verifiser at bruker-ID matcher
-        if str(current_user.id) != checkout_session.client_reference_id:
-            flash('Ugyldig betalingssesjon', 'danger')
-            return redirect(url_for('main.subscription'))
-        
-        # Lagre Stripe Customer ID hvis tilgjengelig
-        if hasattr(checkout_session, 'customer') and checkout_session.customer and not current_user.stripe_customer_id:
-            current_user.stripe_customer_id = checkout_session.customer
-        
-        # Oppdater brukerens abonnementsstatus
-        subscription_type = checkout_session.metadata.get('subscription_type')
-        if subscription_type == 'monthly':
-            current_user.has_subscription = True
-            current_user.subscription_type = 'monthly'
-            current_user.subscription_start = datetime.utcnow()
-            current_user.subscription_end = datetime.utcnow() + timedelta(days=30)
-        elif subscription_type == 'yearly':
-            current_user.has_subscription = True
-            current_user.subscription_type = 'yearly'
-            current_user.subscription_start = datetime.utcnow()
-            current_user.subscription_end = datetime.utcnow() + timedelta(days=365)
-        elif subscription_type == 'lifetime':
-            current_user.has_subscription = True
-            current_user.subscription_type = 'lifetime'
-            current_user.subscription_start = datetime.utcnow()
-            current_user.subscription_end = None
-        
-        db.session.commit()
-        flash('Takk for kjøpet! Du har nå et aktivt abonnement.', 'success')
-        return redirect(url_for('main.index'))
-    except Exception as e:
-        current_app.logger.error(f"Stripe payment success error: {str(e)}")
-        flash(f'Det oppstod en feil ved bekreftelse av betalingen: {str(e)}', 'danger')
-        return redirect(url_for('main.subscription'))
+    """Handle successful payment and subscription activation"""
+    flash('Takk for kjøpet! Ditt abonnement er nå aktivert.', 'success')
+    return redirect(url_for('main.subscription'))
 
 @main.route('/webhook/stripe', methods=['POST'])
 def stripe_webhook():
-    """Håndterer Stripe webhook-hendelser"""
+    """Handle Stripe webhook events"""
     payload = request.get_data()
     sig_header = request.headers.get('Stripe-Signature')
-    webhook_secret = current_app.config['STRIPE_WEBHOOK_SECRET']
-    
-    # Initialiser Stripe API-nøkkel
-    stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
     
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, webhook_secret
+            payload, sig_header, current_app.config['STRIPE_WEBHOOK_SECRET']
         )
     except ValueError as e:
-        # Ugyldig payload
-        current_app.logger.error(f"Stripe webhook error (Invalid payload): {str(e)}")
-        return jsonify(success=False), 400
+        current_app.logger.error(f'Invalid payload: {str(e)}')
+        return 'Invalid payload', 400
     except stripe.error.SignatureVerificationError as e:
-        # Ugyldig signatur
-        current_app.logger.error(f"Stripe webhook error (Invalid signature): {str(e)}")
-        return jsonify(success=False), 400
-    
-    # Håndter hendelsen
+        current_app.logger.error(f'Invalid signature: {str(e)}')
+        return 'Invalid signature', 400
+
     try:
-        if event['type'] == 'checkout.session.completed':
-            session = event['data']['object']
-            _handle_checkout_session(session)
-        elif event['type'] == 'customer.subscription.updated':
-            subscription = event['data']['object']
-            _handle_subscription_updated(subscription)
-        elif event['type'] == 'customer.subscription.deleted':
-            subscription = event['data']['object']
-            _handle_subscription_deleted(subscription)
+        if event.type == 'checkout.session.completed':
+            handle_checkout_session(event.data.object)
+        elif event.type == 'customer.subscription.updated':
+            handle_subscription_update(event.data.object)
+        elif event.type == 'customer.subscription.deleted':
+            handle_subscription_deleted(event.data.object)
     except Exception as e:
-        current_app.logger.error(f"Stripe webhook processing error: {str(e)}")
-        return jsonify(success=False, error=str(e)), 500
-    
-    return jsonify(success=True)
+        current_app.logger.error(f'Error handling webhook {event.type}: {str(e)}')
+        return jsonify({'error': str(e)}), 500
 
-def _handle_checkout_session(session):
-    """Håndterer fullført checkout-sesjon"""
-    user_id = session.get('client_reference_id')
-    if not user_id:
-        return
-    
-    user = User.query.get(int(user_id))
-    if not user:
-        return
-    
-    # Oppdater brukerens abonnementsstatus basert på betalingen
+    return jsonify({'status': 'success'})
+
+def handle_checkout_session(session):
+    """Handle completed checkout session"""
+    user_id = int(session.metadata.get('user_id'))
     subscription_type = session.metadata.get('subscription_type')
-    if subscription_type == 'monthly':
-        user.has_subscription = True
-        user.subscription_type = 'monthly'
-        user.subscription_start = datetime.utcnow()
-        user.subscription_end = datetime.utcnow() + timedelta(days=30)
-    elif subscription_type == 'yearly':
-        user.has_subscription = True
-        user.subscription_type = 'yearly'
-        user.subscription_start = datetime.utcnow()
-        user.subscription_end = datetime.utcnow() + timedelta(days=365)
-    elif subscription_type == 'lifetime':
-        user.has_subscription = True
-        user.subscription_type = 'lifetime'
-        user.subscription_start = datetime.utcnow()
-        user.subscription_end = None
     
-    db.session.commit()
+    user = User.query.get(user_id)
+    if not user:
+        current_app.logger.error(f'User not found: {user_id}')
+        return
+    
+    try:
+        # Update user subscription
+        user.has_subscription = True
+        user.subscription_type = subscription_type
+        user.subscription_start = datetime.utcnow()
+        
+        if subscription_type == 'monthly':
+            user.subscription_end = datetime.utcnow() + timedelta(days=30)
+        elif subscription_type == 'yearly':
+            user.subscription_end = datetime.utcnow() + timedelta(days=365)
+        elif subscription_type == 'lifetime':
+            user.subscription_end = None
+        
+        db.session.commit()
+        current_app.logger.info(f'Subscription activated for user {user_id}')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed to update subscription for user {user_id}: {str(e)}')
+        raise
 
-def _handle_subscription_updated(subscription):
-    """Håndterer oppdatert abonnement"""
-    customer_id = subscription.get('customer')
-    if not customer_id:
-        return
-    
-    user = User.query.filter_by(stripe_customer_id=customer_id).first()
-    if not user:
-        return
-    
-    status = subscription.get('status')
-    
-    if status == 'active':
-        # Abonnement er aktivt
-        user.has_subscription = True
+def handle_subscription_update(subscription):
+    """Handle subscription updates"""
+    try:
+        customer_id = subscription.customer
+        user = User.query.filter_by(stripe_customer_id=customer_id).first()
         
-        # Sjekk abonnement type basert på pris
-        price_id = subscription.get('items', {}).get('data', [{}])[0].get('price', {}).get('id', '')
+        if not user:
+            current_app.logger.error(f'User not found for Stripe customer: {customer_id}')
+            return
         
-        if price_id == current_app.config['STRIPE_MONTHLY_PRICE_ID']:
-            user.subscription_type = 'monthly'
-            # Sett utløpsdato til neste fakturadato
-            user.subscription_end = datetime.fromtimestamp(subscription.get('current_period_end', 0))
-        elif price_id == current_app.config['STRIPE_YEARLY_PRICE_ID']:
-            user.subscription_type = 'yearly'
-            # Sett utløpsdato til neste fakturadato
-            user.subscription_end = datetime.fromtimestamp(subscription.get('current_period_end', 0))
-    elif status in ['canceled', 'unpaid', 'past_due']:
-        # Abonnement er kansellert eller ikke betalt
-        if user.subscription_type in ['monthly', 'yearly']:
-            user.has_subscription = False
-    
-    db.session.commit()
-    
-def _handle_subscription_deleted(subscription):
-    """Håndterer kansellert abonnement"""
-    customer_id = subscription.get('customer')
-    if not customer_id:
-        return
-    
-    user = User.query.filter_by(stripe_customer_id=customer_id).first()
-    if not user:
-        return
-    
-    # Hvis brukeren har et abonnement som ikke er livstid, deaktiver det
-    if user.subscription_type in ['monthly', 'yearly']:
+        # Update subscription status
+        user.has_subscription = subscription.status == 'active'
+        if subscription.status == 'active':
+            if subscription.cancel_at:
+                user.subscription_end = datetime.fromtimestamp(subscription.cancel_at)
+            elif subscription.current_period_end:
+                user.subscription_end = datetime.fromtimestamp(subscription.current_period_end)
+        
+        db.session.commit()
+        current_app.logger.info(f'Subscription updated for user {user.id}')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed to update subscription: {str(e)}')
+        raise
+
+def handle_subscription_deleted(subscription):
+    """Handle subscription cancellation"""
+    try:
+        customer_id = subscription.customer
+        user = User.query.filter_by(stripe_customer_id=customer_id).first()
+        
+        if not user:
+            current_app.logger.error(f'User not found for Stripe customer: {customer_id}')
+            return
+        
+        # Update user subscription status
         user.has_subscription = False
-        # La utløpsdatoen være uendret for referanse
-    
-    db.session.commit()
+        user.subscription_end = datetime.utcnow()
+        
+        db.session.commit()
+        current_app.logger.info(f'Subscription cancelled for user {user.id}')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Failed to cancel subscription: {str(e)}')
+        raise

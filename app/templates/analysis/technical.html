@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+
+{% block title %}Teknisk analyse | Aksjeradar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="my-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Hjem</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('analysis.index') }}">Analyse</a></li>
+            <li class="breadcrumb-item active">Teknisk analyse</li>
+        </ol>
+    </nav>
+    
+    {% include 'analysis/_menu.html' %}
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="mb-3">Teknisk analyse</h1>
+            <p class="lead">Utforsk tekniske indikatorer for aksjer på Oslo Børs og globale markeder.</p>
+        </div>
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('analysis.technical') }}" class="mt-md-4">
+                <div class="input-group">
+                    <input type="text" name="ticker" class="form-control" placeholder="Skriv inn ticker (f.eks. EQNR.OL, AAPL)" value="{{ ticker or '' }}" required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Analyser
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if ticker and technical_data %}
+        <div class="card border-0 shadow mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Teknisk analyse for {{ ticker }}</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <h3 class="h6 mb-0">Generell informasjon</h3>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Siste pris:</th>
+                                        <td>{{ technical_data.last_price|default('N/A', true) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Signal:</th>
+                                        <td>
+                                            <span class="badge {% if technical_data.signal == 'BUY' %}bg-success{% elif technical_data.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ technical_data.signal|default('N/A', true) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Begrunnelse:</th>
+                                        <td>{{ technical_data.signal_reason|default('Ingen begrunnelse tilgjengelig', true) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Sist oppdatert:</th>
+                                        <td>{{ technical_data.last_update|default('I dag', true) }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h3 class="h6 mb-0">Tekniske indikatorer</h3>
+                            </div>                            
+                            <div class="card-body">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>RSI (14):</th>
+                                        <td>
+                                            {{ technical_data.rsi|default('N/A', true) }}
+                                            <span class="text-muted small ms-2">
+                                                {% if technical_data.rsi is defined and technical_data.rsi < 30 %}Oversolgt
+                                                {% elif technical_data.rsi is defined and technical_data.rsi > 70 %}Overkjøpt
+                                                {% else %}Nøytral
+                                                {% endif %}
+                                            </span>
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Relative Strength Index - En momentumoscillator som måler hastigheten og endringen av prisbevegelser. Verdier under 30 tyder på oversolgt, over 70 tyder på overkjøpt."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>MACD:</th>
+                                        <td>
+                                            {{ technical_data.macd|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Moving Average Convergence Divergence - En trendindikator som viser forholdet mellom to glidende gjennomsnitt. Brukes til å identifisere trendendringer og momentum."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>MACD Signal:</th>
+                                        <td>
+                                            {{ technical_data.macd_signal|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Signallinjen til MACD, vanligvis et 9-dagers EMA av MACD-linjen. Kryssing mellom MACD og signallinjen kan gi kjøps- eller salgssignaler."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Støtte:</th>
+                                        <td>
+                                            {{ technical_data.support|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Prisnivå hvor aksjen historisk har hatt en tendens til å stoppe å falle og begynne å stige igjen. Representerer ofte kjøpspunkter."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Motstand:</th>
+                                        <td>
+                                            {{ technical_data.resistance|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Prisnivå hvor aksjen historisk har hatt en tendens til å stoppe å stige og begynne å falle igjen. Representerer ofte salgspunkter."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Volum:</th>
+                                        <td>
+                                            {{ technical_data.volume|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Antall aksjer som har blitt handlet i løpet av siste handelsdag. Høyt volum kan indikere økt interesse og validere prisbevegelser."></i>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Gjennomsnittlig volum:</th>
+                                        <td>
+                                            {{ technical_data.avg_volume|default('N/A', true) }}
+                                            <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" title="Gjennomsnittlig daglig handelsvolum, vanligvis over en 20- eller 30-dagers periode. Brukes for å sammenligne dagens volum med normalt nivå."></i>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h3 class="h6 mb-0">Tolkning og anbefaling</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert {% if technical_data.signal == 'BUY' %}alert-success{% elif technical_data.signal == 'SELL' %}alert-danger{% else %}alert-secondary{% endif %} mb-4">
+                                    <h4 class="alert-heading">{{ technical_data.signal|default('HOLD', true) }}</h4>
+                                    <p>{{ technical_data.signal_reason|default('Basert på teknisk analyse av kursbevegelser og indikatorer.', true) }}</p>
+                                </div>
+                                  <h5>RSI-analyse</h5>
+                                <p>
+                                    <span class="glossary" data-bs-toggle="tooltip" title="Relative Strength Index - En momentumoscillator som måler hastigheten og endringen av prisbevegelser. Verdier under 30 tyder på oversolgt, over 70 tyder på overkjøpt.">RSI (Relative Strength Index)</span>
+                                    {% if technical_data.rsi is defined and technical_data.rsi < 30 %}
+                                        på {{ technical_data.rsi|round(2) }} indikerer at aksjen kan være <strong>oversolgt</strong>. Dette kan være et signal om potensiell oppgang.
+                                    {% elif technical_data.rsi is defined and technical_data.rsi > 70 %}
+                                        på {{ technical_data.rsi|round(2) }} indikerer at aksjen kan være <strong>overkjøpt</strong>. Dette kan være et signal om potensiell nedgang.
+                                    {% elif technical_data.rsi is defined %}
+                                        på {{ technical_data.rsi|round(2) }} er i <strong>nøytralt</strong> territorium, som verken indikerer oversolgt eller overkjøpt tilstand.
+                                    {% else %}
+                                        RSI-data er ikke tilgjengelig.
+                                    {% endif %}
+                                </p>
+                                
+                                <h5>MACD-analyse</h5>
+                                <p>
+                                    <span class="glossary" data-bs-toggle="tooltip" title="Moving Average Convergence Divergence - En trendindikator som viser forholdet mellom to glidende gjennomsnitt. Brukes til å identifisere endringer i styrke, retning, momentum og varighet av en trend.">MACD (Moving Average Convergence Divergence)</span>
+                                    {% if technical_data.macd is defined and technical_data.macd_signal is defined %}
+                                        {% if technical_data.macd > technical_data.macd_signal %}
+                                            ({{ technical_data.macd|round(2) }}) er over signallinjen ({{ technical_data.macd_signal|round(2) }}), som indikerer <strong>bullish momentum</strong>.
+                                        {% elif technical_data.macd < technical_data.macd_signal %}
+                                            ({{ technical_data.macd|round(2) }}) er under signallinjen ({{ technical_data.macd_signal|round(2) }}), som indikerer <strong>bearish momentum</strong>.
+                                        {% else %}
+                                            ({{ technical_data.macd|round(2) }}) er nær signallinjen ({{ technical_data.macd_signal|round(2) }}), som indikerer <strong>nøytralt momentum</strong>.
+                                        {% endif %}
+                                    {% else %}
+                                        MACD-data er ikke tilgjengelig.
+                                    {% endif %}
+                                </p>
+                                
+                                <h5>Støtte og motstand</h5>
+                                <p>
+                                    <span class="glossary" title="Støtte- og motstandsnivåer er prisnivåer hvor aksjen historisk har snudd. Støtte er prisnivåer der kursen typisk slutter å falle og begynner å stige, mens motstand er nivåer der kursen typisk slutter å stige og begynner å falle.">Støtte og motstand</span>
+                                    {% if technical_data.support is defined and technical_data.resistance is defined %}
+                                        Neste støttenivå ved {{ technical_data.support|round(2) }} og motstandsnivå ved {{ technical_data.resistance|round(2) }}.
+                                    {% else %}
+                                        Støtte- og motstandsnivåer er ikke tilgjengelige.
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="d-grid gap-2 mt-4">
+                                    <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-primary">
+                                        <i class="bi bi-lightbulb"></i> Se full anbefaling
+                                    </a>
+                                    <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-graph-up"></i> Se aksjedetaljer
+                                    </a>
+                                    <a href="https://www.nordnet.no/market/stocks/{{ ticker }}" target="_blank" class="btn btn-outline-success">
+                                        <i class="bi bi-cart"></i> Kjøp hos Nordnet
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elif ticker and error %}
+        <div class="alert alert-warning">
+            {{ error }}
+        </div>
+    {% elif ticker %}
+        <div class="alert alert-warning">
+            Kunne ikke hente teknisk analyse for {{ ticker }}.
+        </div>
+    {% else %}
+        <!-- Oslo Børs Section -->
+        <div class="card border-0 shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h5 mb-0">Oslo Børs - Teknisk analyse</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Siste pris</th>
+                                <th>Signal</th>
+                                <th>RSI</th>
+                                <th>MACD</th>
+                                <th>Støtte</th>
+                                <th>Motstand</th>
+                                <th>Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Oslo Børs stocks -->
+                            <tr>
+                                <td><strong>EQNR.OL</strong></td>
+                                <td>342.55</td>
+                                <td><span class="badge bg-success">Buy</span></td>
+                                <td>65.8</td>
+                                <td>0.75</td>
+                                <td>325.00</td>
+                                <td>350.00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('analysis.technical') }}?ticker=EQNR.OL" class="btn btn-outline-primary">Vis detaljer</a>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=EQNR.OL" class="btn btn-outline-info">Full analyse</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>DNB.OL</strong></td>
+                                <td>212.80</td>
+                                <td><span class="badge bg-secondary">Hold</span></td>
+                                <td>52.3</td>
+                                <td>-0.15</td>
+                                <td>205.00</td>
+                                <td>220.00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('analysis.technical') }}?ticker=DNB.OL" class="btn btn-outline-primary">Vis detaljer</a>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=DNB.OL" class="btn btn-outline-info">Full analyse</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>TEL.OL</strong></td>
+                                <td>125.90</td>
+                                <td><span class="badge bg-danger">Sell</span></td>
+                                <td>32.1</td>
+                                <td>-0.55</td>
+                                <td>120.00</td>
+                                <td>135.00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('analysis.technical') }}?ticker=TEL.OL" class="btn btn-outline-primary">Vis detaljer</a>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=TEL.OL" class="btn btn-outline-info">Full analyse</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>YAR.OL</strong></td>
+                                <td>345.10</td>
+                                <td><span class="badge bg-success">Buy</span></td>
+                                <td>63.2</td>
+                                <td>0.86</td>
+                                <td>335.00</td>
+                                <td>355.00</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('analysis.technical') }}?ticker=YAR.OL" class="btn btn-outline-primary">Vis detaljer</a>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=YAR.OL" class="btn btn-outline-info">Full analyse</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>NHY.OL</strong></td>
+                                <td>65.28</td
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cryptocurrency Analysis -->
+        <div class="card border-0 shadow mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h2 class="h5 mb-0">Kryptovaluta - Teknisk analyse</h2>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Siste pris</th>
+                                <th>Signal</th>
+                                <th>RSI</th>
+                                <th>MACD</th>
+                                <th>Støtte</th>
+                                <th>Motstand</th>
+                                <th>Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticker, analysis in analyses.items() if 'USD' in ticker %}
+                            <tr>
+                                <td><strong>{{ ticker }}</strong></td>
+                                <td>{{ analysis.last_price }}</td>
+                                <td>
+                                    <span class="badge {% if analysis.signal == 'Buy' or analysis.signal == 'BUY' %}bg-success{% elif analysis.signal == 'Sell' or analysis.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ analysis.signal }}
+                                    </span>
+                                </td>
+                                <td>{{ analysis.rsi|round(1) }}</td>
+                                <td>{{ analysis.macd|round(2) }}</td>
+                                <td>{{ analysis.support|round(2) }}</td>
+                                <td>{{ analysis.resistance|round(2) }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('analysis.technical') }}?ticker={{ ticker }}" class="btn btn-outline-primary">Vis detaljer</a>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-outline-info">Full analyse</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Explanation cards -->
+        <div class="row mb-4">                <div class="col-md-6">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-light">
+                        <h3 class="h5 mb-0">Tekniske indikatorer - Forklaring</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl>
+                            <dt>RSI (Relative Strength Index)</dt>
+                            <dd>En momentumindikator som måler hastigheten og endringen av prisendringer. RSI varierer fra 0 til 100 og brukes typisk for å identifisere overkjøpte eller oversolgte forhold.
+                                <ul>
+                                    <li>RSI over 70: Aksjen kan være overkjøpt (mulig salgsignal)</li>
+                                    <li>RSI under 30: Aksjen kan være oversolgt (mulig kjøpsignal)</li>
+                                    <li>RSI mellom 30-70: Nøytralt område</li>
+                                </ul>
+                            </dd>
+                            
+                            <dt>MACD (Moving Average Convergence Divergence)</dt>
+                            <dd>En trendbasert momentumindikator som viser forholdet mellom to glidende gjennomsnitt av en aksjes pris.
+                                <ul>
+                                    <li>MACD over signallinjen: Bullish signal (kjøpsmulighet)</li>
+                                    <li>MACD under signallinjen: Bearish signal (salgsmulighet)</li>
+                                    <li>MACD-kryssinger: Når MACD krysser signallinjen, genereres et kjøps- eller salgssignal</li>
+                                    <li>MACD-histogram: Viser avstanden mellom MACD og signallinjen, indikerer momentumstyrke</li>
+                                </ul>
+                            </dd>
+                            
+                            <dt>Støtte og motstand</dt>
+                            <dd>
+                                <ul>
+                                    <li>Støtte: Prisnivåer hvor aksjen historisk har snudd oppover. Jo flere ganger dette nivået testes uten å brytes, jo sterkere er støtten.</li>
+                                    <li>Motstand: Prisnivåer hvor aksjen historisk har hatt problemer med å bryte gjennom. Dersom motstandsnivået brytes, kan det bli et nytt støttenivå.</li>
+                                </ul>
+                            </dd>
+                            
+                            <dt>Volum</dt>
+                            <dd>Antall aksjer eller kontrakter som har blitt handlet i en gitt periode.
+                                <ul>
+                                    <li>Høyt volum ved prisendringer: Bekrefter styrken i trenden</li>
+                                    <li>Lavt volum ved prisendringer: Kan indikere en svak trend som kan reversere</li>
+                                    <li>Volum før kursbevegelser: Ofte vil volumet øke før større kursbevegelser</li>
+                                </ul>
+                            </dd>
+                            
+                            <dt>Glidende gjennomsnitt</dt>
+                            <dd>Beregner gjennomsnittsprisen over en bestemt periode for å identifisere trender.
+                                <ul>
+                                    <li>Kort gjennomsnitt over langt: Bullish signal (oppgående trend)</li>
+                                    <li>Kort gjennomsnitt under langt: Bearish signal (nedgående trend)</li>
+                                    <li>Gyldne kryss: Når kort gjennomsnitt krysser over langt (kjøpssignal)</li>
+                                    <li>Dødens kryss: Når kort gjennomsnitt krysser under langt (salgssignal)</li>
+                                </ul>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card border-0 shadow h-100">
+                    <div class="card-header bg-light">
+                        <h3 class="h5 mb-0">Hvordan bruke teknisk analyse</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Teknisk analyse er basert på prinsippet om at markedsaktivitet reflekterer all tilgjengelig informasjon og at prisene beveger seg i trender. Her er noen tips for å bruke teknisk analyse effektivt:</p>
+                        
+                        <ol>
+                            <li><strong>Bruk flere indikatorer:</strong> Ulike indikatorer kan gi ulike signaler. Det er lurt å bruke flere indikatorer for å bekrefte signaler.</li>
+                            <li><strong>Identifiser trender:</strong> Vurder om aksjen er i en oppadgående, nedadgående eller sidelengs trend før du tar en beslutning.</li>
+                            <li><strong>Vær bevisst på tidshorisonter:</strong> Indikatorer kan gi ulike signaler basert på tidsrammen (f.eks. daglig vs. ukentlig).</li>
+                            <li><strong>Kombiner med fundamental analyse:</strong> Teknisk analyse fungerer best når den brukes sammen med en vurdering av selskapets fundamentale verdier.</li>
+                        </ol>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Tips:</strong> Teknisk analyse er et verktøy for å identifisere potensielle handelsmuligheter, men garanterer ikke fremtidig ytelse. Gjør alltid din egen research og vurder risikoen før du investerer.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 // Service Worker for Aksjeradar PWA
 
-const CACHE_NAME = 'aksjeradar-cache-v1750336960';
+const CACHE_NAME = 'aksjeradar-cache-v1750345341';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache

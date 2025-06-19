@@ -16,8 +16,21 @@
                 <h2 class="mb-4">Serverfeil</h2>
                 <p class="lead mb-4">
                     Beklager, men det oppstod en serverfeil.
+                    {% if is_db_error %}
+                    Det ser ut til å være et problem med databasetilkoblingen.
+                    Vennligst prøv igjen om et øyeblikk.
+                    {% elif is_stripe_error %}
+                    Det oppstod et problem med betalingssystemet.
+                    Vennligst prøv igjen eller kontakt support hvis problemet vedvarer.
+                    {% else %}
                     Vi er kjent med problemet og jobber med å løse det.
+                    {% endif %}
                 </p>
+                {% if error_message and config.DEBUG %}
+                <div class="alert alert-danger">
+                    <pre class="mb-0">{{ error_message }}</pre>
+                </div>
+                {% endif %}
                 <div class="d-grid gap-2 col-md-6 mx-auto">
                     <a href="/" class="btn btn-primary btn-lg">
                         Prøv igjen

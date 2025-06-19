@@ -1,0 +1,130 @@
+from flask import Flask, render_template, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
+import os
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Initialize Flask extensions
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+
+def create_app():
+    """Create and configure the Flask application"""
+    app = Flask(__name__)
+    
+    # Configure app
+    try:
+        from config import Config
+        app.config.from_object(Config)
+    except ImportError as e:
+        app.logger.warning(f'Config import failed: {str(e)}. Using default configuration.')
+        app.config.update(
+            SECRET_KEY=os.environ.get('SECRET_KEY') or 'dette-er-en-hemmelighet',
+            SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL') or 'sqlite:///aksjeradar.db',
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            STRIPE_SECRET_KEY=os.environ.get('STRIPE_SECRET_KEY'),
+            EXPORT_FOLDER=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/exports')
+        )
+
+    # Initialize Stripe
+    if 'STRIPE_SECRET_KEY' in app.config:
+        try:
+            import stripe
+            stripe.api_key = app.config['STRIPE_SECRET_KEY']
+            app.logger.info('Stripe initialized successfully')
+        except Exception as e:
+            app.logger.error(f'Stripe initialization failed: {str(e)}')
+    
+    # Initialize extensions    try:
+        # Initialize database
+        db.init_app(app)
+        
+        # Initialize login manager
+        login_manager.init_app(app)
+        
+        # Initialize migrations
+        migrate.init_app(app, db)
+        
+        # Verify database connection
+        with app.app_context():
+            from .utils.db_check import check_db_connection
+            if not check_db_connection(db):
+                app.logger.warning('Application starting with database connection issues')
+            else:
+                app.logger.info('Flask extensions and database initialized successfully')
+    except Exception as e:
+        app.logger.error(f'Extension initialization failed: {str(e)}')
+        raise
+    
+    # Register blueprints
+    with app.app_context():
+        from .routes.main import main
+        from .routes.stocks import stocks
+        from .routes.analysis import analysis
+        from .routes.portfolio import portfolio
+        
+        app.register_blueprint(main)
+        app.register_blueprint(stocks, url_prefix='/stocks')
+        app.register_blueprint(analysis, url_prefix='/analysis')
+        app.register_blueprint(portfolio, url_prefix='/portfolio')
+          # Register models
+        from .models.user import User
+        from .models.portfolio import Portfolio, PortfolioStock, StockTip
+        from .models.stock import Watchlist, WatchlistStock
+        
+        # Add Jinja2 filter
+        @app.template_filter('now')
+        def _jinja2_filter_now(format_string):
+            from datetime import datetime
+            return datetime.now().strftime(format_string)
+    
+    # Register error handlers
+    @app.errorhandler(404)
+    def page_not_found(e):
+        app.logger.info(f'404 Error: {request.url}')
+        return render_template('404.html'), 404    @app.errorhandler(500)
+    def internal_error(e):
+        # Log the full error with traceback
+        import traceback
+        error_traceback = traceback.format_exc()
+        app.logger.error(f'500 Error: {str(e)}\nTraceback:\n{error_traceback}')
+        
+        # Rollback any pending database transactions
+        try:
+            db.session.rollback()
+        except Exception as rollback_error:
+            app.logger.error(f'Error during database rollback: {str(rollback_error)}')
+        
+        # Check if the error is related to database or Stripe
+        error_type = str(type(e).__name__)
+        error_context = {
+            'is_db_error': 'Database' in error_type or 'SQL' in error_type,
+            'is_stripe_error': 'Stripe' in error_type,
+            'error_message': str(e) if app.debug else None
+        }
+        
+        return render_template('500.html', **error_context), 500
+
+    # Set up logging
+    from logging_config import setup_logging
+    setup_logging(app)    # Ensure required folders exist
+    from .utils.folder_setup import ensure_folders_exist
+    ensure_folders_exist(app)
+
+    @app.before_request
+    def before_request():
+        pass  # Folder creation is now handled during app initialization
+
+    @app.after_request
+    def after_request(response):
+        if response.status_code >= 500:
+            app.logger.error(f'Response {response.status_code}: {response.get_data(as_text=True)}')
+        return response
+
+    return app
+
+# Make sure create_app is available for import
+__all__ = ['create_app']
