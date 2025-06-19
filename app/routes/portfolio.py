@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from ..extensions import db
-from app.models.portfolio import Portfolio, PortfolioStock, StockTip
-from app.models.stock import Watchlist, WatchlistStock
-from app.services.data_service import DataService
-from app.services.analysis_service import AnalysisService
-from app.services.ai_service import AIService
+from ..models.portfolio import Portfolio, PortfolioStock, StockTip
+from ..models.stock import Watchlist, WatchlistStock
+from ..services.data_service import DataService
+from ..services.analysis_service import AnalysisService
+from ..services.ai_service import AIService
 from datetime import datetime, timedelta
 
 portfolio = Blueprint('portfolio', __name__)

@@ -16,3 +16,5 @@ newsapi-python
 numpy
 python-dateutil
 alembic
+setuptools
+importlib-metadata

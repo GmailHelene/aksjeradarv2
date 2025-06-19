@@ -1,1 +1,1 @@
-web: mkdir -p logs && python -m flask db upgrade && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app
+web: PYTHONPATH=/app python -m flask db upgrade && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app

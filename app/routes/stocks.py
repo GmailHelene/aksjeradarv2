@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
-from app.services.data_service import DataService
-from app.services.analysis_service import AnalysisService
+from ..services.data_service import DataService
+from ..services.analysis_service import AnalysisService
 from flask_login import current_user
 from datetime import datetime, timedelta
 

@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_from_directory
-from app.services.analysis_service import AnalysisService
-from app.services.ai_service import AIService
-from app.services.export_service import ExportService
-from app.services.data_service import DataService, OSLO_BORS_TICKERS, GLOBAL_TICKERS
+from ..services.analysis_service import AnalysisService
+from ..services.ai_service import AIService
+from ..services.export_service import ExportService
+from ..services.data_service import DataService, OSLO_BORS_TICKERS, GLOBAL_TICKERS
 import random
 import pandas as pd
 import time

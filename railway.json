@@ -1,10 +1,10 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "pip install -r requirements.txt"
+    "buildCommand": "pip install -r requirements.txt && pip install -e ."
   },
   "deploy": {
-    "startCommand": "mkdir -p logs && python -m flask db upgrade && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app",
+    "startCommand": "PYTHONPATH=/app mkdir -p logs && python check_paths.py > path_debug.log && python -m flask db upgrade && python create_version.py && python update_static_versions.py && gunicorn -c gunicorn.conf.py run:app",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

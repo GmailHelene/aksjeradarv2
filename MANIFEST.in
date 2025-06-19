@@ -1,0 +1,8 @@
+include app/static/css/*.css
+include app/static/js/*.js
+include app/static/images/*
+include app/templates/*.html
+include app/templates/*/*.html
+include app/static/manifest.json
+include app/static/service-worker.js
+recursive-include app *
