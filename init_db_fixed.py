@@ -15,6 +15,12 @@ def init_database(app, db):
         if current_dir not in sys.path:
             sys.path.insert(0, current_dir)
         
+        # Ensure the migrations directory exists with the correct structure
+        migrations_dir = os.path.join(current_dir, 'migrations')
+        if not os.path.exists(migrations_dir):
+            os.makedirs(migrations_dir, exist_ok=True)
+            logger.info(f"Created migrations directory at {migrations_dir}")
+        
         logger.info(f"Current working directory: {current_dir}")
         logger.info(f"Python path: {sys.path}")
         

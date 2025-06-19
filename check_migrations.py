@@ -65,6 +65,9 @@ if __name__ == "__main__":
         print("Successfully imported migrations.env")
     except ImportError as e:
         print(f"Failed to import migrations.env: {e}")
+    except AttributeError as e:
+        print(f"Attribute error in migrations.env: {e}")
+        print("This may be due to version incompatibility with alembic. We'll fix this in the next step.")
 
     # Also try the direct import
     print("\nAttempting to import env from migrations directory:")
@@ -74,3 +77,6 @@ if __name__ == "__main__":
         print("Successfully imported env")
     except ImportError as e:
         print(f"Failed to import env: {e}")
+    except AttributeError as e:
+        print(f"Attribute error in env: {e}")
+        print("This may be due to version incompatibility with alembic. We'll fix this in the next step.")
