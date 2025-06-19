@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template
 import logging
 from logging.handlers import RotatingFileHandler
+from datetime import datetime
 
 # Sett opp logging først
 if not os.path.exists('logs'):
@@ -27,6 +28,16 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dette-er-en-hemmelig
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///app/aksjeradar.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['EXPORT_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/static/exports')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching for all environments
+
+# Force no-cache headers for all responses
+@app.after_request
+def add_no_cache_headers(response):
+    if 'text/html' in response.content_type or 'application/javascript' in response.content_type or 'text/css' in response.content_type:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
 
 # Ensure export folder exists
 os.makedirs(app.config['EXPORT_FOLDER'], exist_ok=True)
@@ -36,6 +47,19 @@ logger.info('Starting Aksjeradar application')
 logger.info(f'Database URI: {app.config["SQLALCHEMY_DATABASE_URI"]}')
 
 try:
+    # Create version timestamp file
+    try:
+        from create_version import create_timestamp
+        version = create_timestamp()
+        logger.info(f'Created version timestamp: {version}')
+    except Exception as e:
+        logger.error(f"Error creating version timestamp: {e}")
+        # Create a simple version file directly
+        version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app/static/version.txt')
+        with open(version_path, 'w') as f:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"Aksjeradar version timestamp: {timestamp}")
+        
     # Import extensions after app is created to avoid circular imports
     from app.extensions import db, login_manager, migrate
 

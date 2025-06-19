@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Aksjeradar - Versjonsinformasjon{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Aksjeradar - Versjonsinformasjon</h3>
+                </div>
+                <div class="card-body">
+                    <h4>Versjon</h4>
+                    <pre class="bg-light p-3 rounded">{{ debug_info.app_version }}</pre>
+                    
+                    <h4 class="mt-4">Systemdetaljer</h4>
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Sist oppdatert</th>
+                                <td>{{ debug_info.deployed_time }}</td>
+                            </tr>
+                            <tr>
+                                <th>Miljø</th>
+                                <td>{{ debug_info.flask_env }}</td>
+                            </tr>
+                            <tr>
+                                <th>Database</th>
+                                <td>{{ debug_info.database_url }}</td>
+                            </tr>
+                            <tr>
+                                <th>Static mappe</th>
+                                <td>{{ debug_info.static_folder }}</td>
+                            </tr>
+                            <tr>
+                                <th>Template mappe</th>
+                                <td>{{ debug_info.template_folder }}</td>
+                            </tr>
+                            <tr>
+                                <th>Cache-innstilling</th>
+                                <td>{{ debug_info.cache_setting }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h4 class="mt-4">Aktuelle tidsstempler</h4>
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Nåværende tid (server)</th>
+                                <td>{{ '%Y-%m-%d %H:%M:%S'|now }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Tilbake til forsiden</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.services.data_service import DataService
 from app.models.user import User
 from ..extensions import db
 import time
+import os
 from datetime import datetime
 
 main = Blueprint('main', __name__)
@@ -221,3 +222,33 @@ def market_overview():
 def service_worker():
     """Serve the service worker from the root"""
     return current_app.send_static_file('service-worker.js')
+
+@main.route('/version')
+def version():
+    """Return version information for debugging"""
+    try:
+        # Try to read the version file
+        version_path = os.path.join(current_app.static_folder, 'version.txt')
+        version_info = "Version file not found"
+        
+        if os.path.exists(version_path):
+            with open(version_path, 'r') as f:
+                version_info = f.read()
+        
+        # Collect some system information
+        debug_info = {
+            'app_version': version_info,
+            'deployed_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'flask_env': os.environ.get('FLASK_ENV', 'not set'),
+            'database_url': current_app.config.get('SQLALCHEMY_DATABASE_URI', 'not set').split('@')[-1] if '@' in current_app.config.get('SQLALCHEMY_DATABASE_URI', '') else 'sqlite',
+            'static_folder': current_app.static_folder,
+            'template_folder': current_app.template_folder,
+            'cache_setting': current_app.config.get('SEND_FILE_MAX_AGE_DEFAULT', 'not set')
+        }
+        
+        return render_template('version.html', debug_info=debug_info)
+    except Exception as e:
+        return jsonify({
+            'error': f"Error getting version info: {str(e)}",
+            'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
