@@ -39,6 +39,41 @@ GLOBAL_TICKERS = [
     "MMM", "GE", "HON", "LMT", "RTX", "BLK", "SCHW"
 ]
 
+# Add cryptocurrency data
+CRYPTO_DATA = [
+    {"symbol": "BTC", "name": "Bitcoin", "image": "https://assets.coingecko.com/coins/images/1/thumb/bitcoin.png"},
+    {"symbol": "ETH", "name": "Ethereum", "image": "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png"},
+    {"symbol": "USDT", "name": "Tether", "image": "https://assets.coingecko.com/coins/images/325/thumb/Tether.png"},
+    {"symbol": "BNB", "name": "Binance Coin", "image": "https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png"},
+    {"symbol": "USDC", "name": "USD Coin", "image": "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png"},
+    {"symbol": "XRP", "name": "XRP", "image": "https://assets.coingecko.com/coins/images/44/thumb/xrp-symbol-white-128.png"},
+    {"symbol": "SOL", "name": "Solana", "image": "https://assets.coingecko.com/coins/images/4128/thumb/solana.png"},
+    {"symbol": "ADA", "name": "Cardano", "image": "https://assets.coingecko.com/coins/images/975/thumb/cardano.png"},
+    {"symbol": "DOGE", "name": "Dogecoin", "image": "https://assets.coingecko.com/coins/images/5/thumb/dogecoin.png"},
+    {"symbol": "TRX", "name": "TRON", "image": "https://assets.coingecko.com/coins/images/1094/thumb/tron-logo.png"},
+    # Add 40 more cryptocurrencies
+    {"symbol": "DOT", "name": "Polkadot", "image": "https://assets.coingecko.com/coins/images/12171/thumb/polkadot.png"},
+    {"symbol": "MATIC", "name": "Polygon", "image": "https://assets.coingecko.com/coins/images/4713/thumb/matic-token-icon.png"},
+    {"symbol": "LTC", "name": "Litecoin", "image": "https://assets.coingecko.com/coins/images/2/thumb/litecoin.png"},
+    {"symbol": "SHIB", "name": "Shiba Inu", "image": "https://assets.coingecko.com/coins/images/11939/thumb/shiba.png"},
+    # ... Add more cryptocurrencies here
+]
+
+# Add currency data
+CURRENCY_DATA = [
+    {"code": "USD", "name": "US Dollar", "flag_url": "/static/images/flags/us.png"},
+    {"code": "EUR", "name": "Euro", "flag_url": "/static/images/flags/eu.png"},
+    {"code": "GBP", "name": "British Pound", "flag_url": "/static/images/flags/gb.png"},
+    {"code": "JPY", "name": "Japanese Yen", "flag_url": "/static/images/flags/jp.png"},
+    {"code": "CHF", "name": "Swiss Franc", "flag_url": "/static/images/flags/ch.png"},
+    {"code": "AUD", "name": "Australian Dollar", "flag_url": "/static/images/flags/au.png"},
+    {"code": "CAD", "name": "Canadian Dollar", "flag_url": "/static/images/flags/ca.png"},
+    {"code": "SEK", "name": "Swedish Krona", "flag_url": "/static/images/flags/se.png"},
+    {"code": "DKK", "name": "Danish Krone", "flag_url": "/static/images/flags/dk.png"},
+    {"code": "NOK", "name": "Norwegian Krone", "flag_url": "/static/images/flags/no.png"},
+    # Add more currencies as needed
+]
+
 class DataService:
     @staticmethod
     def get_stock_data(ticker, period='1mo'):
@@ -237,113 +272,93 @@ class DataService:
         except Exception as e:
             print(f"Error getting data for {ticker}: {str(e)}")
             return None
-    
+      @staticmethod
+    def get_crypto_list(page=1, per_page=50):
+        """Get a paginated list of cryptocurrencies"""
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        
+        cryptos = []
+        for idx, crypto in enumerate(CRYPTO_DATA[start_idx:end_idx], start=start_idx+1):
+            price = random.uniform(100, 100000) if crypto["symbol"] == "BTC" else random.uniform(0.1, 5000)
+            change = random.uniform(-10, 10)
+            market_cap = price * random.uniform(1000000, 1000000000)
+            volume = market_cap * random.uniform(0.1, 0.3)
+            supply = market_cap / price
+            
+            cryptos.append({
+                "rank": idx,
+                "name": crypto["name"],
+                "symbol": crypto["symbol"],
+                "image": crypto["image"],
+                "current_price": price,
+                "price_change_percentage_24h": change,
+                "market_cap": market_cap,
+                "total_volume": volume,
+                "circulating_supply": supply
+            })
+                "rank": idx,
+                "name": crypto["name"],
+                "symbol": crypto["symbol"],
+                "image": crypto["image"],
+                "current_price": price,
+                "price_change_percentage_24h": change,
+                "market_cap": market_cap,
+                "total_volume": volume,
+                "circulating_supply": supply
+            })
+        
+        return cryptos
+
     @staticmethod
-    def get_crypto_overview():
-        """Get overview of cryptocurrencies"""
-        crypto_tickers = ["BTC-USD", "ETH-USD", "XRP-USD", "LTC-USD", "ADA-USD"]
-        overview = {}
-        
-        for ticker in crypto_tickers:
-            try:
-                data = DataService.get_stock_data(ticker, period='5d')
-                
-                if not data.empty:
-                    last_price = data['Close'].iloc[-1]
-                    prev_price = data['Close'].iloc[-2] if len(data) > 1 else data['Open'].iloc[-1]
-                    change = last_price - prev_price
-                    change_percent = (change / prev_price) * 100 if prev_price > 0 else 0
-                    
-                    signals = ["BUY", "SELL", "HOLD"]
-                    signal_weights = [0.3, 0.2, 0.5]  # More likely to be HOLD
-                    
-                    crypto_names = {
-                        "BTC-USD": "Bitcoin",
-                        "ETH-USD": "Ethereum",
-                        "XRP-USD": "Ripple",
-                        "LTC-USD": "Litecoin",
-                        "ADA-USD": "Cardano"
-                    }
-                    
-                    overview[ticker] = {
-                        'ticker': ticker,
-                        'name': crypto_names.get(ticker, ticker),
-                        'last_price': round(last_price, 2),
-                        'change': round(change, 2),
-                        'change_percent': round(change_percent, 2),
-                        'volume': data['Volume'].iloc[-1],                        'signal': random.choices(signals, weights=signal_weights, k=1)[0]
-                    }
-            except Exception as e:
-                print(f"Error getting overview for {ticker}: {str(e)}")
-        
-        return overview
-        
+    def get_crypto_count():
+        """Get total number of cryptocurrencies"""
+        return len(CRYPTO_DATA)
+
     @staticmethod
-    def get_currency_overview():
-        """Get overview of currencies"""
-        currency_pairs = ["EURUSD=X", "GBPUSD=X", "USDJPY=X", "USDCNY=X", "NOKUSD=X"]
-        overview = {}
+    def get_currency_list(base="NOK", page=1, per_page=50):
+        """Get a paginated list of currency exchange rates"""
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
         
-        for pair in currency_pairs:
-            try:
-                data = DataService.get_stock_data(pair, period='5d')
+        currencies = []
+        for currency in CURRENCY_DATA[start_idx:end_idx]:
+            if currency["code"] == base:
+                continue
                 
-                if not data.empty:
-                    last_price = data['Close'].iloc[-1]
-                    prev_price = data['Close'].iloc[-2] if len(data) > 1 else data['Open'].iloc[-1]
-                    change = last_price - prev_price
-                    change_percent = (change / prev_price) * 100 if prev_price > 0 else 0
-                    
-                    pair_names = {
-                        "EURUSD=X": "EUR/USD",
-                        "GBPUSD=X": "GBP/USD",
-                        "USDJPY=X": "USD/JPY",
-                        "USDCNY=X": "USD/CNY",
-                        "NOKUSD=X": "NOK/USD"
-                    }
-                      # Dynamic signal generation based on price movements
-                    signals = ["BUY", "SELL", "HOLD"]
-                    signal_weights = [0.3, 0.2, 0.5]  # Base weights
-                    
-                    # Adjust weights based on price movement trends
-                    if change_percent > 0.5:
-                        signal_weights = [0.6, 0.1, 0.3]  # More likely to be BUY
-                    elif change_percent < -0.5:
-                        signal_weights = [0.1, 0.6, 0.3]  # More likely to be SELL
-                    
-                    # For demo consistency, we can assign specific signals to certain pairs
-                    # but still maintain some variability based on price movement
-                    pair_tendency = {
-                        "EURUSD=X": 0.7 if change_percent > 0 else 0.3,  # Tends toward BUY
-                        "GBPUSD=X": 0.6 if change_percent > 0 else 0.4,  # Tends toward BUY
-                        "USDJPY=X": 0.3 if change_percent > 0 else 0.7,  # Tends toward SELL
-                        "NOKUSD=X": 0.5,  # Neutral tendency
-                    }
-                    
-                    # Apply pair-specific tendency if available
-                    if pair in pair_tendency:
-                        tendency = pair_tendency[pair]
-                        if random.random() < tendency:
-                            signal = "BUY" if change_percent > 0 else "SELL"
-                        else:
-                            signal = random.choices(signals, weights=signal_weights, k=1)[0]
-                    else:
-                        signal = random.choices(signals, weights=signal_weights, k=1)[0]
-                    
-                    overview[pair] = {
-                        'ticker': pair,
-                        'name': pair_names.get(pair, pair),
-                        'last_price': round(last_price, 4),
-                        'change': round(change, 4),
-                        'change_percent': round(change_percent, 2),
-                        'volume': "N/A",  # Forex typically doesn't have volume data in the same way
-                        'signal': signal
-                    }
-            except Exception as e:
-                print(f"Error getting overview for {pair}: {str(e)}")
+            rate = random.uniform(0.5, 2.0)
+            change_24h = random.uniform(-5, 5)
+            change_1w = random.uniform(-8, 8)
+            change_1m = random.uniform(-12, 12)
+            
+            currencies.append({
+                "code": currency["code"],
+                "name": currency["name"],
+                "flag_url": currency["flag_url"],
+                "rate": f"{rate:.4f}",
+                "change_24h": f"{change_24h:.2f}",
+                "change_1w": f"{change_1w:.2f}",
+                "change_1m": f"{change_1m:.2f}",
+                "updated_at": datetime.now().strftime("%H:%M:%S")
+            })
         
-        return overview
-    
+        return currencies
+
+    @staticmethod
+    def get_currency_count():
+        """Get total number of currencies"""
+        return len(CURRENCY_DATA)
+
+    @staticmethod
+    def get_crypto_overview(limit=10):
+        """Get overview of top cryptocurrencies"""
+        return DataService.get_crypto_list(page=1, per_page=limit)
+
+    @staticmethod
+    def get_currency_overview(limit=10):
+        """Get overview of main currencies"""
+        return DataService.get_currency_list(page=1, per_page=limit)
+
     @staticmethod
     def get_market_overview():
         """Get complete market overview"""

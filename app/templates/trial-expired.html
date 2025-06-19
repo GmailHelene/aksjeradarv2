@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Prøveperioden er utløpt - Aksjeradar{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow mb-4">
+                <div class="card-header bg-black text-white">
+                    <h1 class="h3 mb-0">Prøveperioden er utløpt</h1>
+                </div>
+                <div class="card-body bg-dark text-white">
+                    <div class="text-center mb-4">
+                        <p class="lead">Din 10-minutters prøveperiode er nå utløpt.</p>
+                        <p>For å fortsette å bruke Aksjeradar, velg et av våre abonnement under:</p>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h3 class="h5 mb-0">Månedlig abonnement</h3>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="display-4 text-center mb-3">99,-<small class="text-muted">/mnd</small></h4>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Full tilgang til alle analyser</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Porteføljeovervåking</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Varsling på kurs og volum</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Avanserte analyseverktøy</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Ingen bindingstid</li>
+                                    </ul>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('main.subscription', plan='monthly') }}" class="btn btn-primary">Velg månedlig</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h3 class="h5 mb-0">Årlig abonnement</h3>
+                                    <span class="badge bg-warning text-dark position-absolute top-0 end-0 mt-2 me-2">Spar 33%</span>
+                                </div>
+                                <div class="card-body">
+                                    <h4 class="display-4 text-center mb-3">799,-<small class="text-muted">/år</small></h4>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Alt i månedlig abonnement</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>2 måneder gratis</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Prioritert support</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tidlig tilgang til nye funksjoner</li>
+                                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Best verdi</li>
+                                    </ul>
+                                    <div class="d-grid">
+                                        <a href="{{ url_for('main.subscription', plan='yearly') }}" class="btn btn-success">Velg årlig</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <h3 class="h4 mb-3">Hvorfor velge Aksjeradar?</h3>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-chart-line fa-2x text-primary"></i>
+                                </div>
+                                <h4 class="h5">Avanserte analyser</h4>
+                                <p class="text-muted">Få tilgang til profesjonelle analyseverktøy og innsikt</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-bell fa-2x text-primary"></i>
+                                </div>
+                                <h4 class="h5">Sanntidsvarsler</h4>
+                                <p class="text-muted">Motta varsler om viktige endringer i markedet</p>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-shield fa-2x text-primary"></i>
+                                </div>
+                                <h4 class="h5">Sikker og pålitelig</h4>
+                                <p class="text-muted">Data fra pålitelige kilder og sikker håndtering</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <h3 class="h4 mb-3">Ofte stilte spørsmål</h3>
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Kan jeg bytte abonnement senere?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Ja, du kan enkelt bytte mellom månedlig og årlig abonnement. Endringen trer i kraft ved neste fakturaperiode.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Er det bindingstid?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Nei, du kan si opp abonnementet når som helst. Du beholder tilgangen ut perioden du har betalt for.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Hvilke betalingsmetoder aksepterer dere?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Vi aksepterer alle vanlige betalingskort (Visa, Mastercard) og Vipps.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

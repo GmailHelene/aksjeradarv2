@@ -9,7 +9,21 @@
         <div class="row align-items-center">
             <div class="col-lg-10 mb-3 mb-lg-0">
                 <h1 class="display-5 fw-bold mb-2 text-white">Aksjeradar</h1>
-                <p class="lead mb-3 text-white">Din digitale aksje- og finansassistent for Oslo Børs og internasjonale markeder.</p>
+                <p class="lead mb-3 text-whi        <!-- Call to Action -->
+        <div class="card bg-dark text-white mb-5">
+            <div class="card-body p-4 text-center">
+                <h2 class="h3 mb-3">Start din investeringsreise i dag</h2>
+                <p class="lead mb-4">Lag en gratis konto for å spore aksjer, opprette porteføljer og få personlige anbefalinger.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('portfolio.index') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Min portefølje</a>
+                    {% else %}
+                    <a href="{{ url_for('main.register') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Registrer deg</a>
+                    <a href="{{ url_for('main.login') }}" class="btn btn-outline-light btn-lg">Logg inn</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>e aksje- og finansassistent for Oslo Børs og internasjonale markeder.</p>
                 <div class="d-grid gap-2 d-md-flex">
                     <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-light px-4 me-md-2"><i class="bi bi-graph-up"></i> Utforsk aksjer</a>
                     <a href="{{ url_for('analysis.technical') }}" class="btn btn-outline-light px-4"><i class="bi bi-bar-chart"></i> Teknisk analyse</a>

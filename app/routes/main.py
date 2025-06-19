@@ -1,13 +1,14 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
 from ..services.data_service import DataService
 from ..models.user import User
 from ..extensions import db
 from ..utils.subscription import subscription_required
+from ..utils.trial import trial_required
+from datetime import datetime, timedelta
 import time
 import os
 import stripe
-from datetime import datetime, timedelta
 
 main = Blueprint('main', __name__)
 
@@ -46,6 +47,7 @@ def on_register(state):
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
 
 @main.route('/')
+@trial_required
 def index():
     market_overview = {}
     oslo_stocks = {}
@@ -567,3 +569,21 @@ def handle_subscription_deleted(subscription):
         db.session.rollback()
         current_app.logger.error(f'Failed to cancel subscription: {str(e)}')
         raise
+
+@main.route('/trial-expired')
+def trial_expired():
+    """Show the trial expired page"""
+    trial_used = False
+    if current_user.is_authenticated:
+        trial_used = current_user.trial_used
+    else:
+        # Check anonymous trial
+        trial_start = session.get('anonymous_trial_start')
+        if trial_start:
+            trial_start = datetime.fromisoformat(trial_start)
+            trial_end = trial_start + timedelta(minutes=10)
+            trial_used = datetime.utcnow() > trial_end
+    
+    return render_template('trial-expired.html', 
+                         trial_used=trial_used,
+                         is_authenticated=current_user.is_authenticated)

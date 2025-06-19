@@ -58,27 +58,75 @@ body {
     color: #ffffff;
 }
 
+/* Dropdown styling */
 .dropdown-menu {
     background-color: #212529 !important;
-    border-color: #444;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .dropdown-item {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.85) !important;
 }
 
-.dropdown-item:hover {
-    background-color: #343a40;
-    color: #fff;
+.dropdown-item:hover, 
+.dropdown-item:focus {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
 }
 
 .dropdown-divider {
-    border-top-color: #444;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.navbar-brand {
-    font-weight: bold;
-    letter-spacing: 0.5px;
+/* Explore stocks button */
+.btn-explore {
+    background-color: #212529 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff;
+    transition: all 0.3s ease;
+}
+
+.btn-explore:hover,
+.btn-explore:focus {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #ffffff !important;
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #212529;
+        color: #ffffff;
+    }
+
+    .card {
+        background-color: #2c3034;
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-header {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-bottom-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Dark mode text colors */
+    .text-dark {
+        color: #ffffff !important;
+    }
+
+    /* Dark mode form controls */
+    .form-control {
+        background-color: #2c3034;
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+    }
+
+    .form-control:focus {
+        background-color: #2c3034;
+        border-color: #0d6efd;
+        color: #ffffff;
+    }
 }
 
 /* Footer */
@@ -226,4 +274,50 @@ footer.bg-dark .container {
     .btn-group-sm .btn {
         margin-bottom: 0.25rem;
     }
+}
+
+/* Dark backgrounds with light text */
+.bg-dark {
+    background-color: #212529 !important;
+    color: #ffffff !important;
+}
+
+.bg-black {
+    background-color: #000000 !important;
+}
+
+.hover-dark:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Button styles */
+.btn-dark.bg-black {
+    border-color: #000000;
+}
+
+.btn-dark.bg-black:hover {
+    background-color: #000000 !important;
+    border-color: #000000;
+}
+
+/* Light text on dark backgrounds */
+.bg-primary, .bg-success, .bg-info, .bg-dark {
+    color: #ffffff !important;
+}
+
+.bg-primary *, .bg-success *, .bg-info *, .bg-dark * {
+    color: #ffffff !important;
+}
+
+/* "Vis alle" buttons */
+.btn-show-all {
+    background-color: #212529 !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff;
+}
+
+.btn-show-all:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
 }

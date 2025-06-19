@@ -3,24 +3,32 @@ from ..services.data_service import DataService
 from ..services.analysis_service import AnalysisService
 from flask_login import current_user
 from ..utils.subscription import subscription_required
+from ..utils.trial import trial_required
 from datetime import datetime, timedelta
+import math
 
 stocks = Blueprint('stocks', __name__)
 
 @stocks.route('/')
+@trial_required
 def index():
     """Show a list of popular stocks"""
     # Get most active stocks
-    oslo_stocks = DataService.get_oslo_bors_overview()
-    global_stocks = DataService.get_global_stocks_overview()
+    oslo_stocks = DataService.get_oslo_bors_overview(limit=20)  # Increased limit
+    global_stocks = DataService.get_global_stocks_overview(limit=20)  # Increased limit
+    crypto_data = DataService.get_crypto_overview(limit=10)  # Added crypto
+    currency_data = DataService.get_currency_overview(limit=10)  # Added currency
     
     return render_template(
         'stocks/index.html',
         oslo_stocks=oslo_stocks,
-        global_stocks=global_stocks
+        global_stocks=global_stocks,
+        crypto_data=crypto_data,
+        currency_data=currency_data
     )
 
 @stocks.route('/details/<ticker>')
+@trial_required
 def details(ticker):
     """Show details for a specific stock"""
     try:
@@ -58,6 +66,7 @@ def details(ticker):
         return redirect(url_for('stocks.index'))
 
 @stocks.route('/search')
+@trial_required
 def search():
     """Search for stocks"""
     query = request.args.get('query', '')
@@ -68,30 +77,62 @@ def search():
     return render_template('stocks/search.html', results=results, query=query)
 
 @stocks.route('/list/oslo')
+@trial_required
 def oslo_list():
     """List all Oslo Børs stocks"""
     oslo_stocks = DataService.get_oslo_bors_overview()
     return render_template('stocks/list.html', stocks=oslo_stocks, title="Oslo Børs")
 
 @stocks.route('/list/global')
+@trial_required
 def global_list():
     """List popular global stocks"""
     global_stocks = DataService.get_global_stocks_overview()
     return render_template('stocks/list.html', stocks=global_stocks, title="Global Markets")
 
 @stocks.route('/list/crypto')
-def crypto_list():
-    """List popular cryptocurrencies"""
-    crypto = DataService.get_crypto_overview()
-    return render_template('stocks/list.html', stocks=crypto, title="Cryptocurrencies")
+@trial_required
+def crypto():
+    """Show cryptocurrency list"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 50  # Increased number of items per page
+    
+    crypto_data = DataService.get_crypto_list(page=page, per_page=per_page)
+    total_items = DataService.get_crypto_count()
+    total_pages = math.ceil(total_items / per_page)
+    
+    has_next = page < total_pages
+    
+    return render_template(
+        'stocks/crypto.html',
+        crypto_data=crypto_data,
+        current_page=page,
+        has_next_page=has_next
+    )
 
-# Add this fallback route to handle the old URL pattern
-@stocks.route('/list')
-def list():
-    """Redirect to oslo_list as a fallback"""
-    return redirect(url_for('stocks.oslo_list'))
+@stocks.route('/list/currency')
+@trial_required
+def currency():
+    """Show currency exchange rates"""
+    page = request.args.get('page', 1, type=int)
+    base = request.args.get('base', 'NOK')
+    per_page = 50
+    
+    currencies = DataService.get_currency_list(base=base, page=page, per_page=per_page)
+    total_items = DataService.get_currency_count()
+    total_pages = math.ceil(total_items / per_page)
+    
+    has_next = page < total_pages
+    
+    return render_template(
+        'stocks/currency.html',
+        currencies=currencies,
+        current_page=page,
+        has_next_page=has_next
+    )
 
 @stocks.route('/compare')
+@trial_required
 def compare():
     """Compare multiple stocks"""
     tickers = request.args.get('tickers', '').split(',')

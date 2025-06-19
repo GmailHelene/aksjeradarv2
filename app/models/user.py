@@ -49,6 +49,15 @@ class User(UserMixin, db.Model):
         trial_end = self.trial_start + timedelta(minutes=10)
         return datetime.utcnow() <= trial_end
     
+    def is_trial_expired(self):
+        """Check if the trial period has expired"""
+        if not self.trial_used:
+            return False
+        
+        # Trial period is 10 minutes
+        trial_end = self.trial_start + timedelta(minutes=10)
+        return datetime.utcnow() > trial_end
+    
     def has_active_subscription(self):
         """Check if the user has an active subscription"""
         # If user has a subscription and it's not expired
@@ -60,6 +69,19 @@ class User(UserMixin, db.Model):
             return True
         
         # Or if they're in trial period
+        return self.is_in_trial_period()
+    
+    def can_access_content(self):
+        """Check if the user can access premium content"""
+        # If user has an active subscription
+        if self.has_active_subscription():
+            return True
+        
+        # If user hasn't started trial yet
+        if not self.trial_used:
+            return True
+        
+        # If user is in trial period
         return self.is_in_trial_period()
     
     def subscription_days_left(self):
