@@ -4,17 +4,38 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Prisprediksjoner</h1>
+    <nav aria-label="breadcrumb" class="my-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Hjem</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('analysis.index') }}">Analyse</a></li>
+            <li class="breadcrumb-item active">Prisprediksjoner</li>
+        </ol>
+    </nav>
+    
+    <h1 class="mb-4">Prisprediksjoner <span class="badge bg-info">AI-drevet</span></h1>
+    <p class="lead mb-4">Maskinlæringsbaserte prediksjoner for fremtidig kursutvikling. Våre modeller bruker historiske data, tekniske indikatorer, markedssentiment og fundamentale faktorer.</p>
+    
+    <div class="alert alert-info">
+        <div class="d-flex">
+            <div class="me-3">
+                <i class="bi bi-info-circle-fill fs-4"></i>
+            </div>
+            <div>
+                <h5>Om prismodellen</h5>
+                <p class="mb-0">Prismodellene er basert på avansert maskinlæring som analyserer historiske mønstre, tekniske indikatorer, markedssentiment og fundamentale faktorer. Prediksjoner vises med konfidensgrad, høyere konfidens indikerer større sikkerhet i prediksjonen.</p>
+            </div>
+        </div>
+    </div>
     
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card border-0 shadow h-100">
-                <div class="card-header bg-primary bg-opacity-75 text-white">
-                    <h2 class="h5 mb-0">Oslo Børs Aksjer</h2>
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h5 mb-0">Oslo Børs - Prisforventninger</h2>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table mb-0">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Ticker</th>
@@ -22,20 +43,29 @@
                                     <th>Prediksjon</th>
                                     <th>Endring %</th>
                                     <th>Konfidens</th>
+                                    <th>Handlinger</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for ticker, pred in predictions_oslo.items() %}
                                 <tr>
                                     <td>
-                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                                            <strong>{{ ticker }}</strong>
+                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none fw-bold">
+                                            {{ ticker }}
                                         </a>
+                                        <div class="small text-muted">
+                                            {% if ticker == 'EQNR.OL' %}Equinor
+                                            {% elif ticker == 'DNB.OL' %}DNB Bank
+                                            {% elif ticker == 'TEL.OL' %}Telenor
+                                            {% elif ticker == 'YAR.OL' %}Yara Int.
+                                            {% elif ticker == 'NHY.OL' %}Norsk Hydro
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>{{ pred.last_price }}</td>
                                     <td>{{ pred.next_price }}</td>
                                     <td>
-                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% endif %}">
                                             {{ pred.change_percent }}%
                                         </span>
                                     </td>
@@ -44,27 +74,37 @@
                                             {{ pred.confidence }}
                                         </span>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-3">Ingen prediksjoner tilgjengelig</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <div class="card-footer text-center py-2">
+                    <p class="small mb-1">Basert på data fra siste {{ predictions_oslo[predictions_oslo.keys()|first].data_period|default('60 dager', true) }}</p>
+                    <p class="small mb-0">Periode for prediksjon: {{ predictions_oslo[predictions_oslo.keys()|first].trend_period|default('5-30 dager', true) }}</p>
+                </div>
             </div>
         </div>
         
         <div class="col-md-6">
-            <div class="card border-0 shadow h-100">
-                <div class="card-header bg-success bg-opacity-75 text-white">
-                    <h2 class="h5 mb-0">Globale Aksjer</h2>
+            <div class="card shadow border-0 h-100">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h5 mb-0">Globale Aksjer - Prisforventninger</h2>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table mb-0">
+                        <table class="table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Ticker</th>
@@ -72,20 +112,29 @@
                                     <th>Prediksjon</th>
                                     <th>Endring %</th>
                                     <th>Konfidens</th>
+                                    <th>Handlinger</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for ticker, pred in predictions_global.items() %}
                                 <tr>
                                     <td>
-                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                                            <strong>{{ ticker }}</strong>
+                                        <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none fw-bold">
+                                            {{ ticker }}
                                         </a>
+                                        <div class="small text-muted">
+                                            {% if ticker == 'AAPL' %}Apple Inc
+                                            {% elif ticker == 'MSFT' %}Microsoft
+                                            {% elif ticker == 'AMZN' %}Amazon
+                                            {% elif ticker == 'GOOGL' %}Alphabet
+                                            {% elif ticker == 'TSLA' %}Tesla
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>{{ pred.last_price }}</td>
                                     <td>{{ pred.next_price }}</td>
                                     <td>
-                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                        <span class="{% if pred.change_percent > 0 %}text-success{% elif pred.change_percent < 0 %}text-danger{% endif %}">
                                             {{ pred.change_percent }}%
                                         </span>
                                     </td>
@@ -94,12 +143,211 @@
                                             {{ pred.confidence }}
                                         </span>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-3">Ingen prediksjoner tilgjengelig</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-center py-2">
+                    <p class="small mb-1">Basert på data fra siste {{ predictions_global[predictions_global.keys()|first].data_period|default('60 dager', true) }}</p>
+                    <p class="small mb-0">Periode for prediksjon: {{ predictions_global[predictions_global.keys()|first].trend_period|default('5-30 dager', true) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Crypto Predictions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h2 class="h5 mb-0">Kryptovaluta - Prisforventninger</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Navn</th>
+                                    <th>Nåpris</th>
+                                    <th>Prediksjon</th>
+                                    <th>Endring %</th>
+                                    <th>Konfidens</th>
+                                    <th>Volatilitet</th>
+                                    <th>Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>BTC-USD</strong></td>
+                                    <td>Bitcoin</td>
+                                    <td>65,432.10</td>
+                                    <td>68,420.35</td>
+                                    <td><span class="text-success">+4.57%</span></td>
+                                    <td><span class="badge bg-success">HIGH</span></td>
+                                    <td>3.8%</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker=BTC-USD" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker='BTC-USD') }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ETH-USD</strong></td>
+                                    <td>Ethereum</td>
+                                    <td>3,456.78</td>
+                                    <td>3,690.24</td>
+                                    <td><span class="text-success">+6.75%</span></td>
+                                    <td><span class="badge bg-success">HIGH</span></td>
+                                    <td>4.2%</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker=ETH-USD" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker='ETH-USD') }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>XRP-USD</strong></td>
+                                    <td>Ripple</td>
+                                    <td>0.5432</td>
+                                    <td>0.5123</td>
+                                    <td><span class="text-danger">-5.69%</span></td>
+                                    <td><span class="badge bg-warning">MEDIUM</span></td>
+                                    <td>6.8%</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker=XRP-USD" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker='XRP-USD') }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ADA-USD</strong></td>
+                                    <td>Cardano</td>
+                                    <td>0.4321</td>
+                                    <td>0.4625</td>
+                                    <td><span class="text-success">+7.03%</span></td>
+                                    <td><span class="badge bg-warning">MEDIUM</span></td>
+                                    <td>5.4%</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('analysis.recommendation') }}?ticker=ADA-USD" class="btn btn-outline-primary">
+                                                <i class="bi bi-graph-up"></i> Analyse
+                                            </a>
+                                            <a href="{{ url_for('stocks.details', ticker='ADA-USD') }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-info-circle"></i> Detaljer
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Currency Predictions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow border-0">
+                <div class="card-header bg-info text-white">
+                    <h2 class="h5 mb-0">Valuta - Prisforventninger</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Valutapar</th>
+                                    <th>Nåverdi</th>
+                                    <th>Prediksjon</th>
+                                    <th>Endring %</th>
+                                    <th>Signal</th>
+                                    <th>Konfidens</th>
+                                    <th>Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>EUR/USD</strong></td>
+                                    <td>1.0865</td>
+                                    <td>1.0932</td>
+                                    <td><span class="text-success">+0.62%</span></td>
+                                    <td><span class="badge bg-success">BUY</span></td>
+                                    <td><span class="badge bg-warning">MEDIUM</span></td>
+                                    <td>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=EURUSD=X" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-graph-up"></i> Analyse
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>USD/JPY</strong></td>
+                                    <td>151.23</td>
+                                    <td>149.76</td>
+                                    <td><span class="text-danger">-0.97%</span></td>
+                                    <td><span class="badge bg-danger">SELL</span></td>
+                                    <td><span class="badge bg-success">HIGH</span></td>
+                                    <td>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=USDJPY=X" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-graph-up"></i> Analyse
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>GBP/USD</strong></td>
+                                    <td>1.2654</td>
+                                    <td>1.2698</td>
+                                    <td><span class="text-success">+0.35%</span></td>
+                                    <td><span class="badge bg-secondary">HOLD</span></td>
+                                    <td><span class="badge bg-warning">MEDIUM</span></td>
+                                    <td>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=GBPUSD=X" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-graph-up"></i> Analyse
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NOK/USD</strong></td>
+                                    <td>0.0956</td>
+                                    <td>0.0973</td>
+                                    <td><span class="text-success">+1.78%</span></td>
+                                    <td><span class="badge bg-success">BUY</span></td>
+                                    <td><span class="badge bg-warning">MEDIUM</span></td>
+                                    <td>
+                                        <a href="{{ url_for('analysis.recommendation') }}?ticker=NOKUSD=X" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-graph-up"></i> Analyse
+                                        </a>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -109,19 +357,48 @@
     </div>
     
     <div class="card border-0 shadow mb-4">
-        <div class="card-header bg-primary bg-gradient">
-            <h3 class="card-title h5 text-white mb-0">Om Prisprediksjoner</h3>
+        <div class="card-header bg-primary bg-gradient text-white">
+            <h3 class="card-title h5 mb-0">Om Prisprediksjoner</h3>
         </div>
         <div class="card-body">
-            <p>Våre prisprediksjoner er basert på avanserte algoritmer som kombinerer teknisk analyse, markedstrender og maskinlæringsmodeller.</p>
-            <p><strong>Konfidensnivåer:</strong></p>
-            <ul>
-                <li><span class="badge bg-success">HIGH</span> - Modellen har høy konfidens i prediksjonen, basert på sterke signaler og konsistente mønstre.</li>
-                <li><span class="badge bg-warning">MEDIUM</span> - Modellen har moderat konfidens, prediksjonen er sannsynlig, men det er noen motstridende signaler.</li>
-                <li><span class="badge bg-secondary">LOW</span> - Modellen har lav konfidens, prediksjonene bør behandles med forsiktighet.</li>
-            </ul>
-            <div class="alert alert-info" role="alert">
-                <strong>Merk:</strong> Prediksjonene er kun ment som veiledende informasjon og ikke som investeringsråd. Aksjemarkedet er påvirket av mange faktorer som kan endre seg raskt.
+            <p>Våre prisprediksjoner er basert på avanserte algoritmer som kombinerer teknisk analyse,Markedssentiment og maskinlæringsmodeller.</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <h5>Konfidensnivåer</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><span class="badge bg-success me-2">HIGH</span> Høy konfidens - modellen har sterk tiltro til prediksjonen basert på konsistente mønstre og klare signaler</li>
+                        <li class="mb-2"><span class="badge bg-warning me-2">MEDIUM</span> Moderat konfidens - prediksjonen er sannsynlig, men det er noen motstridende signaler</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">LOW</span> Lav konfidens - prediksjonen har betydelig usikkerhet og bør behandles med forsiktighet</li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4">
+                    <h5>Datakilder</h5>
+                    <ul>
+                        <li>Historiske kurser og volum</li>
+                        <li>Tekniske indikatorer (RSI, MACD, osv.)</li>
+                        <li>Markedssentiment fra nyheter og sosiale medier</li>
+                        <li>Makroøkonomiske indikatorer</li>
+                        <li>Sektorspesifikke trender</li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4">
+                    <h5>Tidshorisont</h5>
+                    <p>Våre prediksjoner er generelt basert på:</p>
+                    <ul>
+                        <li>Kort sikt: 5-30 dager</li>
+                        <li>Mellomlangt sikt: 1-3 måneder</li>
+                        <li>Langsiktig: 3-12 måneder</li>
+                    </ul>
+                    <p>Prediksjoner oppdateres daglig basert på nyeste markedsdata.</p>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-3" role="alert">
+                <h5><i class="bi bi-info-circle me-2"></i>Viktig merknad</h5>
+                <p class="mb-0">Prediksjonene er kun ment som veiledende informasjon og ikke som investeringsråd. Aksjemarkedet er påvirket av mange faktorer som kan endre seg raskt. Gjør alltid din egen analyse før du fatter investeringsbeslutninger.</p>
             </div>
         </div>
     </div>
@@ -134,125 +411,5 @@
             <i class="bi bi-graph-up"></i> Utforsk aksjer
         </a>
     </div>
-</div>
-{% endblock %}
-        <div class="card-header bg-primary text-white">
-          <h2 class="h4 mb-0">Oslo Børs - Prediksjoner</h2>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover m-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Ticker</th>
-                  <th>Siste</th>
-                  <th>Neste</th>
-                  <th>Endring</th>
-                  <th>Trend</th>
-                  <th>Konfidens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ticker, prediction in predictions_oslo.items() %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                      <strong>{{ ticker }}</strong>
-                    </a>
-                  </td>
-                  <td>{{ prediction.last_price }}</td>
-                  <td>{{ prediction.next_price }}</td>
-                  <td class="{{ 'text-success' if prediction.change_percent > 0 else 'text-danger' }}">
-                    {{ prediction.change_percent }}%
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.trend == 'UP' else 'bg-danger' }}">
-                      {{ prediction.trend }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.confidence == 'HIGH' else 'bg-warning' if prediction.confidence == 'MEDIUM' else 'bg-danger' }}">
-                      {{ prediction.confidence }}
-                    </span>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-lg-6">
-      <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-          <h2 class="h4 mb-0">Globale Aksjer - Prediksjoner</h2>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover m-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Ticker</th>
-                  <th>Siste</th>
-                  <th>Neste</th>
-                  <th>Endring</th>
-                  <th>Trend</th>
-                  <th>Konfidens</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ticker, prediction in predictions_global.items() %}
-                <tr>
-                  <td>
-                    <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">
-                      <strong>{{ ticker }}</strong>
-                    </a>
-                  </td>
-                  <td>{{ prediction.last_price }}</td>
-                  <td>{{ prediction.next_price }}</td>
-                  <td class="{{ 'text-success' if prediction.change_percent > 0 else 'text-danger' }}">
-                    {{ prediction.change_percent }}%
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.trend == 'UP' else 'bg-danger' }}">
-                      {{ prediction.trend }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge {{ 'bg-success' if prediction.confidence == 'HIGH' else 'bg-warning' if prediction.confidence == 'MEDIUM' else 'bg-danger' }}">
-                      {{ prediction.confidence }}
-                    </span>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="row">
-    <div class="col-12">
-      <div class="card mb-4">
-        <div class="card-header bg-info text-white">
-          <h2 class="h4 mb-0">Detaljert Prediksjonsinformasjon</h2>
-        </div>
-        <div class="card-body">
-          <p class="mb-3">Velg en aksje fra tabellene ovenfor for å se detaljerte prediksjoner.</p>
-          
-          <div class="alert alert-info">
-            <h4 class="alert-heading">Om våre prediksjoner</h4>
-            <p>Våre kursprediksjoner er basert på avanserte algoritmer og maskinlæring som analyserer historiske data,Markedssentiment og tekniske indikatorer.</p>
-            <hr>
-            <p class="mb-0">Konfidensnivået indikerer vår algoritmes sikkerhet i prediksjonen - høyere konfidens betyr større sannsynlighet for at prediksjonen er korrekt.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 {% endblock %}

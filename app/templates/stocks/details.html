@@ -1,286 +1,483 @@
 {% extends 'base.html' %}
-{% block title %}{{ ticker }} - Detaljer{% endblock %}
-{% block head %}
-<script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
-{% endblock %}
-{% block content %}
-<div class="container mt-4">
-  <h1>{{ ticker }} - Aksjedetaljer</h1>
 
-  <div class="row mb-4">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-header">
-          <h2>Kursutvikling (3 måneder)</h2>
+{% block title %}{{ ticker }} - Aksjedetaljer | Aksjeradar{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb" class="my-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Hjem</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('stocks.index') }}">Aksjer</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ ticker }}</li>
+        </ol>
+    </nav>
+    
+    <div class="stock-details-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1>{{ stock_info.shortName|default(ticker, true) }}</h1>
+                <p class="text-muted mb-0">{{ stock_info.longName|default('', true) }}</p>
+                <div class="mt-2">
+                    <span class="badge bg-secondary">{{ stock_info.sector|default('N/A', true) }}</span>
+                    <span class="badge bg-light text-dark">{{ stock_info.country|default('N/A', true) }}</span>
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <div class="stock-price d-inline-block">
+                    {% if not stock_data.empty and 'Close' in stock_data.columns %}
+                        {{ stock_data['Close'].iloc[-1]|round(2) }}
+                    {% else %}
+                        {{ technical_analysis.last_price|default('N/A', true) }}
+                    {% endif %}
+                </div>
+                
+                {% set change = 0 %}
+                {% set change_percent = 0 %}
+                
+                {% if not stock_data.empty and 'Close' in stock_data.columns and stock_data|length > 1 %}
+                    {% set change = stock_data['Close'].iloc[-1] - stock_data['Close'].iloc[-2] %}
+                    {% if stock_data['Close'].iloc[-2] != 0 %}
+                        {% set change_percent = (change / stock_data['Close'].iloc[-2] * 100) %}
+                    {% endif %}
+                {% endif %}
+                
+                <div class="stock-change d-inline-block {{ 'text-success' if change_percent > 0 else 'text-danger' if change_percent < 0 else '' }}">
+                    {{ change|round(2) }} ({{ change_percent|round(2) }}%)
+                </div>
+                  <div class="data-timestamp">
+                    Sist oppdatert: {{ technical_analysis.last_update|default('I dag', true) }}
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <div id="stock-chart" style="height: 400px;"></div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Kursutvikling</h2>
+                </div>
+                <div class="card-body chart-container" style="height: 400px;">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
         </div>
-      </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Teknisk analyse</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Signal</h6>
+                        <div class="d-flex align-items-center">
+                            <span class="badge {% if technical_analysis.signal == 'BUY' %}bg-success{% elif technical_analysis.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %} me-2">
+                                {{ technical_analysis.signal|default('N/A', true) }}
+                            </span>
+                            <span class="small text-muted">
+                                {{ technical_analysis.signal_reason|default('Ingen signaldata tilgjengelig.', true)|truncate(50, true) }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>RSI <span class="small text-muted glossary" title="Relative Strength Index - Teknisk indikator mellom 0-100 som måler prisendringenes hastighet og endring. Under 30 indikerer oversolgt, over 70 indikerer overkjøpt.">(Relative Strength Index)</span></h6>
+                        <div class="progress" style="height: 20px;" title="Verdier under 30 indikerer oversolgt, verdier over 70 indikerer overkjøpt" data-bs-toggle="tooltip">
+                            {% if technical_analysis.rsi is defined and technical_analysis.rsi != 'N/A' %}
+                                {% set rsi = technical_analysis.rsi|float %}
+                                <div class="progress-bar {% if rsi < 30 %}bg-danger{% elif rsi > 70 %}bg-warning{% else %}bg-success{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ rsi }}%" 
+                                     aria-valuenow="{{ rsi }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">{{ rsi|round(1) }}</div>
+                            {% else %}
+                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">N/A</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>MACD <span class="small text-muted glossary" title="Moving Average Convergence Divergence - Teknisk indikator som viser forholdet mellom to glidende gjennomsnitt av prisene. Brukes for å identifisere trendstyrke og momentum.">(Moving Average Convergence Divergence)</span></h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">MACD linje</div>
+                                {% if technical_analysis.macd is defined and technical_analysis.macd != 'N/A' and technical_analysis.macd_signal is defined and technical_analysis.macd_signal != 'N/A' %}
+                                    <span class="{{ 'text-success' if technical_analysis.macd|float > technical_analysis.macd_signal|float else 'text-danger' }}">
+                                        {{ technical_analysis.macd }}
+                                    </span>
+                                {% else %}
+                                    <span>N/A</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">Signallinje</div>
+                                {{ technical_analysis.macd_signal|default('N/A', true) }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Støtte/Motstand <span class="small text-muted glossary" title="Prisnivåer hvor aksjen historisk har hatt problemer med å bryte gjennom. Støtte er nivåer hvor kursen pleier å snu oppover, motstand er nivåer hvor kursen pleier å snu nedover.">(Support/Resistance)</span></h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">Støtte</div>
+                                {% if technical_analysis.support is defined and technical_analysis.support != 'N/A' %}
+                                    {{ technical_analysis.support|round(2) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">Motstand</div>
+                                {% if technical_analysis.resistance is defined and technical_analysis.resistance != 'N/A' %}
+                                    {{ technical_analysis.resistance|round(2) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h6>Volum <span class="small text-muted glossary" title="Antall aksjer som handles i løpet av en periode. Høyt volum kan indikere sterk interesse i aksjen.">(Volume)</span></h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">Dagens</div>
+                                {% if technical_analysis.volume is defined and technical_analysis.volume != 'N/A' %}
+                                    {% set volume_value = technical_analysis.volume|int / 1000000 %}
+                                    {{ volume_value|round(2) }} M
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted mb-1">Gjennomsnitt</div>
+                                {% if technical_analysis.avg_volume is defined and technical_analysis.avg_volume != 'N/A' %}
+                                    {% set avg_volume_value = technical_analysis.avg_volume|int / 1000000 %}
+                                    {{ avg_volume_value|round(2) }} M
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('analysis.technical') }}?ticker={{ ticker }}" class="btn btn-primary">
+                        <i class="bi bi-bar-chart"></i> Full teknisk analyse
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Handlinger</h2>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-outline-primary">
+                            <i class="bi bi-lightbulb"></i> Handelsanbefaling
+                        </a>
+                        <a href="{{ url_for('analysis.prediction') }}" class="btn btn-outline-info">
+                            <i class="bi bi-graph-up-arrow"></i> Prisprediksjon
+                        </a>
+                        <a href="{{ url_for('analysis.ai') }}?ticker={{ ticker }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-robot"></i> AI-analyse
+                        </a>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('portfolio.quick_add_stock', ticker=ticker) }}" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Legg til i portefølje
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline-success">
+                            <i class="bi bi-person"></i> Logg inn for å legge til i portefølje
+                        </a>
+                        {% endif %}
+                        <a href="https://www.nordnet.no/market/stocks/{{ ticker }}" target="_blank" class="btn btn-warning">
+                            <i class="bi bi-cart"></i> Kjøp hos Nordnet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div class="col-md-4">
-      <div class="card">
-        <div class="card-header">
-          <h2>Oversikt</h2>
-        </div>
-        <div class="card-body">
-          <table class="table">
-            <tbody>
-              <tr>
-                <th>Siste kurs</th>
-                <td>{{ stock_data['Close'].iloc[-1].item() if stock_data is defined and not stock_data.empty else 'N/A' }}</td>
-              </tr>
-              <tr>
-                <th>Endring (dag)</th>
-                {% if stock_data is defined and not stock_data.empty %}
-                  {% set last_close = stock_data['Close'].iloc[-1].item() %}
-                  {% set prev_close = stock_data['Close'].iloc[-2].item() if stock_data.shape[0] > 1 else stock_data['Open'].iloc[-1].item() %}
-                  {% set change = last_close - prev_close %}
-                  {% set change_percent = (change / prev_close * 100) if prev_close > 0 else 0 %}
-                  <td class="{% if change > 0 %}text-success{% elif change < 0 %}text-danger{% endif %}">
-                    {{ "%.2f"|format(change) }} ({{ "%.2f"|format(change_percent) }}%)
-                  </td>
-                {% else %}
-                  <td>N/A</td>
-                {% endif %}
-              </tr>
-              <tr>
-                <th>Volum (dag)</th>
-                <td>{{ stock_data['Volume'].iloc[-1].item()|int if stock_data is defined and not stock_data.empty and 'Volume' in stock_data else 'N/A' }}</td>
-              </tr>
-              <tr>
-                <th>52-uker høy</th>
-                <td>{{ stock_data['High'].max().item()|round(2) if stock_data is defined and not stock_data.empty else 'N/A' }}</td>
-              </tr>
-              <tr>
-                <th>52-uker lav</th>
-                <td>{{ stock_data['Low'].min().item()|round(2) if stock_data is defined and not stock_data.empty else 'N/A' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  {% if technical_analysis %}
-  <div class="card mb-4">
-    <div class="card-header">
-      <h2>Teknisk analyse</h2>
-    </div>
-    <div class="card-body">
-      <div class="row">
+    <div class="row">
         <div class="col-md-6">
-          <table class="table">
-            <tbody>
-              <tr>
-                <th>Signal</th>
-                <td class="{% if technical_analysis.signal == 'Buy' %}text-success{% elif technical_analysis.signal == 'Sell' %}text-danger{% else %}text-warning{% endif %}">
-                  {{ technical_analysis.signal }}
-                </td>
-                <td>
-                  <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Samlet handelssignal basert på tekniske indikatorer. 'Buy' indikerer positivt momentum, 'Sell' indikerer negativt momentum, og 'Hold' indikerer usikkerhet eller sidelengs bevegelse."></i>
-                </td>
-              </tr>
-              <tr>
-                <th>RSI (14)</th>
-                <td>{{ technical_analysis.rsi }}</td>
-                <td>
-                  <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Relative Strength Index måler momentumet i prisendringer. Verdier over 70 indikerer overkjøp, under 30 indikerer oversalg. Data er beregnet over 14 dager."></i>
-                </td>
-              </tr>
-              <tr>
-                <th>MACD</th>
-                <td>{{ technical_analysis.macd }}</td>
-                <td>
-                  <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Moving Average Convergence Divergence er en trendindikator som viser forholdet mellom to glidende gjennomsnitt. Positive verdier tyder på opptrend, negative på nedtrend."></i>
-                </td>
-              </tr>
-              <tr>
-                <th>Støtte/Motstand</th>
-                <td>{{ technical_analysis.support }}/{{ technical_analysis.resistance }}</td>
-                <td>
-                  <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Støttenivå er der aksjen har stoppet å falle tidligere. Motstandsnivå er der aksjen har stoppet å stige tidligere. Verdiene er beregnet fra historiske prisdata."></i>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Selskapsinfo</h2>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Ticker</th>
+                                <td>{{ ticker }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Selskap</th>
+                                <td>{{ stock_info.shortName|default(ticker, true) }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Sektor</th>
+                                <td>{{ stock_info.sector|default('N/A', true) }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Land</th>
+                                <td>{{ stock_info.country|default('N/A', true) }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Markedsverdi</th>
+                                <td>
+                                    {% if stock_info.marketCap is defined and stock_info.marketCap != 'N/A' %}
+                                        {% set market_cap = stock_info.marketCap / 1000000000 %}
+                                        {{ market_cap|round(2) }} MRD
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Utbytteavkastning</th>
+                                <td>
+                                    {% if stock_info.dividendYield is defined and stock_info.dividendYield != 'N/A' %}
+                                        {% set dividend_yield = stock_info.dividendYield * 100 %}
+                                        {{ dividend_yield|round(2) }}%
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+        
         <div class="col-md-6">
-          {% if technical_analysis.signal_reason %}
-          <div class="alert alert-info">
-            <h5>Begrunnelse:</h5>
-            <p>{{ technical_analysis.signal_reason }}</p>
-            <small class="text-muted">Sist oppdatert: {% now 'Y-m-d H:i' %} (alle analyser oppdateres daglig)</small>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="mt-4">
-        <h4>Tekniske Indikatorer - Forklaring</h4>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="card mb-3">
-              <div class="card-header">RSI (Relative Strength Index)</div>
-              <div class="card-body">
-                <p>RSI er en momentumoscillator som måler hastigheten og endringen av prissvingninger. RSI svinger mellom 0 og 100.</p>
-                <ul>
-                  <li>RSI > 70: Aksjen kan være overkjøpt</li>
-                  <li>RSI < 30: Aksjen kan være oversolgt</li>
-                </ul>
-              </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h5 mb-0">Nøkkeldata</h2>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Dagens åpning</th>
+                                <td>
+                                    {% if not stock_data.empty and 'Open' in stock_data.columns %}
+                                        {{ stock_data['Open'].iloc[-1]|round(2) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Dagens høy</th>
+                                <td>
+                                    {% if not stock_data.empty and 'High' in stock_data.columns %}
+                                        {{ stock_data['High'].iloc[-1]|round(2) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Dagens lav</th>
+                                <td>
+                                    {% if not stock_data.empty and 'Low' in stock_data.columns %}
+                                        {{ stock_data['Low'].iloc[-1]|round(2) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Dagens slutt</th>
+                                <td>
+                                    {% if not stock_data.empty and 'Close' in stock_data.columns %}
+                                        {{ stock_data['Close'].iloc[-1]|round(2) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Volum</th>
+                                <td>
+                                    {% if not stock_data.empty and 'Volume' in stock_data.columns %}
+                                        {% set volume = stock_data['Volume'].iloc[-1] / 1000000 %}
+                                        {{ volume|round(2) }} M
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">52-ukers høy</th>
+                                <td>
+                                    {% if not stock_data.empty and 'High' in stock_data.columns %}
+                                        {{ stock_data['High'].max()|round(2) }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card mb-3">
-              <div class="card-header">MACD (Moving Average Convergence Divergence)</div>
-              <div class="card-body">
-                <p>MACD er en trendindikator som viser forholdet mellom to glidende gjennomsnitt.</p>
-                <ul>
-                  <li>MACD over signallinje: Bullish signal (kjøp)</li>
-                  <li>MACD under signallinje: Bearish signal (selg)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
-  {% endif %}
-  
-  <div class="d-flex justify-content-between">
-    <a href="{{ url_for('stocks.list') }}" class="btn btn-secondary">Tilbake til aksjeliste</a>
-    <div>
-      <a href="{{ url_for('analysis.ai', ticker=ticker) }}" class="btn btn-info">AI Analyse</a>
-      <a href="https://www.nordnet.no/market/stocks/{{ ticker }}" target="_blank" class="btn btn-primary">Kjøp hos Nordnet</a>
+    
+    <!-- Relaterte aksjer og nyheter -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Relaterte aksjer</h2>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if ticker == 'EQNR.OL' %}
+                            <a href="{{ url_for('stocks.details', ticker='AKERBP.OL') }}" class="list-group-item list-group-item-action">AKERBP.OL - Aker BP</a>
+                            <a href="{{ url_for('stocks.details', ticker='TGS.OL') }}" class="list-group-item list-group-item-action">TGS.OL - TGS ASA</a>
+                            <a href="{{ url_for('stocks.details', ticker='AKSO.OL') }}" class="list-group-item list-group-item-action">AKSO.OL - Aker Solutions</a>
+                        {% elif ticker == 'DNB.OL' %}
+                            <a href="{{ url_for('stocks.details', ticker='STB.OL') }}" class="list-group-item list-group-item-action">STB.OL - Storebrand</a>
+                            <a href="{{ url_for('stocks.details', ticker='SBANK.OL') }}" class="list-group-item list-group-item-action">SBANK.OL - Sparebanken Vest</a>
+                            <a href="{{ url_for('stocks.details', ticker='NONG.OL') }}" class="list-group-item list-group-item-action">NONG.OL - SpareBank 1 Nord-Norge</a>
+                        {% elif ticker == 'AAPL' %}
+                            <a href="{{ url_for('stocks.details', ticker='MSFT') }}" class="list-group-item list-group-item-action">MSFT - Microsoft</a>
+                            <a href="{{ url_for('stocks.details', ticker='GOOGL') }}" class="list-group-item list-group-item-action">GOOGL - Alphabet</a>
+                            <a href="{{ url_for('stocks.details', ticker='META') }}" class="list-group-item list-group-item-action">META - Meta Platforms</a>
+                        {% elif ticker == 'MSFT' %}
+                            <a href="{{ url_for('stocks.details', ticker='AAPL') }}" class="list-group-item list-group-item-action">AAPL - Apple</a>
+                            <a href="{{ url_for('stocks.details', ticker='GOOGL') }}" class="list-group-item list-group-item-action">GOOGL - Alphabet</a>
+                            <a href="{{ url_for('stocks.details', ticker='AMZN') }}" class="list-group-item list-group-item-action">AMZN - Amazon</a>
+                        {% else %}
+                            <a href="{{ url_for('stocks.details', ticker='EQNR.OL') }}" class="list-group-item list-group-item-action">EQNR.OL - Equinor</a>
+                            <a href="{{ url_for('stocks.details', ticker='AAPL') }}" class="list-group-item list-group-item-action">AAPL - Apple</a>
+                            <a href="{{ url_for('stocks.details', ticker='MSFT') }}" class="list-group-item list-group-item-action">MSFT - Microsoft</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h2 class="h5 mb-0">Markedsnyheter</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-primary me-2">Nyhet</span>
+                                <span class="small text-muted">I dag</span>
+                            </div>
+                            <p class="mb-0">Sterke resultater fra teknologisektoren løfter markedet</p>
+                        </li>
+                        <li class="mb-3">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-info me-2">Analyse</span>
+                                <span class="small text-muted">I går</span>
+                            </div>
+                            <p class="mb-0">Analyseekspert: "Fokuser på selskaper med sterk kontantstrøm i usikre tider"</p>
+                        </li>
+                        <li>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-warning text-dark me-2">Makro</span>
+                                <span class="small text-muted">2 dager siden</span>
+                            </div>
+                            <p class="mb-0">Nye inflassjonstall kan påvirke sentralbankens rentebeslutning</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="#" class="btn btn-sm btn-outline-primary">Se flere nyheter</a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+    
+    <div class="d-flex justify-content-between mt-4 mb-5">
+        <a href="{{ url_for('stocks.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Tilbake til aksjer
+        </a>
+        <a href="{{ url_for('analysis.recommendation') }}?ticker={{ ticker }}" class="btn btn-primary">
+            <i class="bi bi-graph-up"></i> Se handelsanbefaling
+        </a>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltips.forEach(tooltip => {
-      new bootstrap.Tooltip(tooltip);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart data
+        const chartData = {{ chart_data|tojson }};
+        
+        if (chartData && chartData.length > 0) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            const dates = chartData.map(item => item.date);
+            const prices = chartData.map(item => item.close);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Sluttkurs',
+                        data: prices,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 1,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('stockChart').innerHTML = '<div class="text-center py-5"><i class="bi bi-exclamation-circle text-secondary fs-1"></i><p class="mt-3 text-muted">Ingen data tilgjengelig for grafen</p></div>';
+        }
+        
+        // Enable tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"], .glossary'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
-    
-    // Bruk data fra serveren hvis tilgjengelig, ellers bruk demodata
-    let dates = [];
-    let prices = [];
-    let volumes = [];
-    
-    {% if stock_data is defined and not stock_data.empty %}
-      // Bruk ekte data fra pandas DataFrame
-      {% for date, row in stock_data.iterrows() %}
-        dates.push("{{ date.strftime('%Y-%m-%d') }}");
-        prices.push({{ row['Close'] }});
-        {% if 'Volume' in row %}
-          volumes.push({{ row['Volume'] }});
-        {% else %}
-          volumes.push(0);
-        {% endif %}
-      {% endfor %}
-    {% else %}
-      // Lag demodata
-      const today = new Date();
-      let basePrice = 0;
-      
-      {% if ticker == 'EQNR.OL' %}
-        basePrice = 300;
-      {% elif ticker == 'DNB.OL' %}
-        basePrice = 200;
-      {% elif ticker == 'AAPL' %}
-        basePrice = 180;
-      {% elif ticker == 'MSFT' %}
-        basePrice = 380;
-      {% elif ticker == 'AMZN' %}
-        basePrice = 170;
-      {% elif ticker == 'TSLA' %}
-        basePrice = 220;
-      {% else %}
-        basePrice = 100;
-      {% endif %}
-      
-      for (let i = 90; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        dates.push(date.toISOString().split('T')[0]);
-        
-        // Legg til litt tilfeldig variasjon
-        const randomChange = (Math.random() - 0.5) * 5;
-        basePrice = basePrice + randomChange;
-        if (basePrice < 10) basePrice = 10; // Ikke la prisen gå under 10
-        
-        prices.push(basePrice);
-        volumes.push(Math.floor(Math.random() * 1000000) + 500000);
-      }
-    {% endif %}
-    
-    // Opprett pris-grafen
-    const trace1 = {
-      x: dates,
-      y: prices,
-      type: 'scatter',
-      mode: 'lines',
-      name: '{{ ticker }} Pris',
-      line: {
-        color: 'rgb(49, 130, 189)',
-        width: 2
-      }
-    };
-    
-    // Opprett volum-bargrafen
-    const trace2 = {
-      x: dates,
-      y: volumes,
-      type: 'bar',
-      name: 'Volum',
-      yaxis: 'y2',
-      marker: {
-        color: 'rgba(55, 128, 191, 0.3)'
-      }
-    };
-    
-    const layout = {
-      title: '{{ ticker }} - Kursutvikling (3 måneder)',
-      xaxis: {
-        title: 'Dato',
-        rangeslider: {visible: true},
-        type: 'date'
-      },
-      yaxis: {
-        title: 'Pris (NOK)',
-        fixedrange: false
-      },
-      yaxis2: {
-        title: 'Volum',
-        overlaying: 'y',
-        side: 'right',
-        showgrid: false
-      },
-      height: 500,
-      margin: {
-        l: 50,
-        r: 50,
-        b: 50,
-        t: 50,
-        pad: 4
-      },
-      legend: {
-        orientation: 'h',
-        y: -0.2
-      }
-    };
-    
-    const config = {responsive: true};
-    
-    Plotly.newPlot('stock-chart', [trace1, trace2], layout, config);
-  });
 </script>
 {% endblock %}

@@ -1,13 +1,16 @@
-<ul class="nav nav-tabs mb-4">
-  <li class="nav-item">
-    <a class="nav-link {% if request.endpoint == 'analysis.technical' %}active{% endif %}" href="{{ url_for('analysis.technical') }}">Teknisk analyse</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link {% if request.endpoint == 'analysis.prediction' %}active{% endif %}" href="{{ url_for('analysis.prediction') }}">Pris prediksjon</a>
-  </li>
-  <li class="nav-item">
-    <a class="nav-link {% if request.endpoint == 'analysis.ai_analysis' %}active{% endif %}" href="{{ url_for('analysis.ai') }}">AI-analyse</a>  </li>
-  <li class="nav-item">
-    <a class="nav-link {% if request.endpoint == 'analysis.market_overview' %}active{% endif %}" href="{{ url_for('analysis.market_overview') }}">Markedsoversikt</a>
-  </li>
-</ul>
+<div class="mb-4">
+    <div class="btn-group w-100">
+        <a href="{{ url_for('analysis.technical') }}" class="btn {% if request.path == url_for('analysis.technical') %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="bi bi-bar-chart"></i> Teknisk analyse
+        </a>
+        <a href="{{ url_for('analysis.prediction') }}" class="btn {% if request.path == url_for('analysis.prediction') %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="bi bi-graph-up-arrow"></i> Pris prediksjon
+        </a>
+        <a href="{{ url_for('analysis.ai') }}" class="btn {% if request.path == url_for('analysis.ai') %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="bi bi-robot"></i> AI-analyse
+        </a>
+        <a href="{{ url_for('analysis.market_overview') }}" class="btn {% if request.path == url_for('analysis.market_overview') %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="bi bi-globe2"></i> Markedsoversikt
+        </a>
+    </div>
+</div>

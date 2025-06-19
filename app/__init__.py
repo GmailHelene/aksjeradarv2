@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 import os
 
 # Import extensions from extensions.py
@@ -32,17 +32,25 @@ def create_app():
         app.register_blueprint(stocks, url_prefix='/stocks')
         app.register_blueprint(analysis, url_prefix='/analysis')
         app.register_blueprint(portfolio, url_prefix='/portfolio')
-        
-        # Register models
+          # Register models
         from .models.user import User
         from .models.portfolio import Portfolio, PortfolioStock, StockTip
         from .models.stock import Watchlist, WatchlistStock
+        
+        # Add Jinja2 filter
+        @app.template_filter('now')
+        def _jinja2_filter_now(format_string):
+            from datetime import datetime
+            return datetime.now().strftime(format_string)
     
-    # Add Jinja2 filter
-    @app.template_filter('now')
-    def _jinja2_filter_now(format_string):
-        from datetime import datetime
-        return datetime.now().strftime(format_string)
+    # Register error handlers
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+        
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        return render_template('500.html'), 500
     
     return app
 

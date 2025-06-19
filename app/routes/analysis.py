@@ -55,9 +55,10 @@ def technical():
     if not ticker:
         # Create demo data for the technical analysis page
         analyses = {
+            # Oslo Børs
             'EQNR.OL': {
                 'last_price': 342.55,
-                'signal': 'Buy',
+                'signal': 'BUY',
                 'rsi': 65.8,
                 'macd': 0.75,
                 'macd_signal': 0.32,
@@ -70,7 +71,7 @@ def technical():
             },
             'DNB.OL': {
                 'last_price': 212.80,
-                'signal': 'Hold',
+                'signal': 'HOLD',
                 'rsi': 52.3,
                 'macd': -0.15,
                 'macd_signal': -0.12,
@@ -81,48 +82,22 @@ def technical():
                 'last_update': datetime.now().strftime('%Y-%m-%d'),
                 'signal_reason': 'DNB viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD nær nulllinjen.'
             },
-            'AAPL': {
-                'last_price': 185.70,
-                'signal': 'Buy',
-                'rsi': 62.5,
-                'macd': 0.43,
-                'macd_signal': 0.21,
-                'support': 178.00,
-                'resistance': 192.00,
-                'volume': 52000000,
-                'avg_volume': 48000000,
+            'TEL.OL': {
+                'last_price': 125.90,
+                'signal': 'SELL',
+                'rsi': 32.1,
+                'macd': -0.55,
+                'macd_signal': -0.32,
+                'support': 120.00,
+                'resistance': 135.00,
+                'volume': 1200000,
+                'avg_volume': 1100000,
                 'last_update': datetime.now().strftime('%Y-%m-%d'),
-                'signal_reason': 'Apple viser positive tekniske signaler med RSI i oppadgående trend og økende volum.'
-            },
-            'MSFT': {
-                'last_price': 390.20,
-                'signal': 'Buy',
-                'rsi': 67.8,
-                'macd': 1.25,
-                'macd_signal': 0.65,
-                'support': 375.00,
-                'resistance': 400.00,
-                'volume': 22000000,
-                'avg_volume': 19500000,
-                'last_update': datetime.now().strftime('%Y-%m-%d'),
-                'signal_reason': 'Microsoft viser sterke tekniske signaler med både RSI og MACD i oppadgående trend.'
-            },
-            'TSLA': {
-                'last_price': 230.10,
-                'signal': 'Sell',
-                'rsi': 28.5,
-                'macd': -1.85,
-                'macd_signal': -0.95,
-                'support': 220.00,
-                'resistance': 250.00,
-                'volume': 89000000,
-                'avg_volume': 65000000,
-                'last_update': datetime.now().strftime('%Y-%m-%d'),
-                'signal_reason': 'Tesla viser negative tekniske signaler med RSI i oversolgt område og MACD under signallinjen.'
+                'signal_reason': 'Telenor viser negative tekniske signaler med RSI nær oversolgt område og MACD under signallinjen.'
             },
             'YAR.OL': {
                 'last_price': 345.10,
-                'signal': 'Buy',
+                'signal': 'BUY',
                 'rsi': 63.2,
                 'macd': 0.86,
                 'macd_signal': 0.45,
@@ -135,7 +110,7 @@ def technical():
             },
             'NHY.OL': {
                 'last_price': 65.28,
-                'signal': 'Hold',
+                'signal': 'HOLD',
                 'rsi': 50.6,
                 'macd': 0.05,
                 'macd_signal': 0.03,
@@ -146,22 +121,143 @@ def technical():
                 'last_update': datetime.now().strftime('%Y-%m-%d'),
                 'signal_reason': 'Norsk Hydro viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD nær nulllinjen.'
             },
-            'TEL.OL': {
-                'last_price': 125.90,
-                'signal': 'Sell',
-                'rsi': 32.1,
-                'macd': -0.55,
-                'macd_signal': -0.32,
-                'support': 120.00,
-                'resistance': 135.00,
-                'volume': 1200000,
-                'avg_volume': 1100000,
+            'MOWI.OL': {
+                'last_price': 186.30,
+                'signal': 'BUY',
+                'rsi': 62.8,
+                'macd': 0.62,
+                'macd_signal': 0.40,
+                'support': 175.00,
+                'resistance': 195.00,
+                'volume': 1100000,
+                'avg_volume': 980000,
                 'last_update': datetime.now().strftime('%Y-%m-%d'),
-                'signal_reason': 'Telenor viser negative tekniske signaler med RSI nær oversolgt område og MACD under signallinjen.'
+                'signal_reason': 'Mowi viser positive tekniske signaler med RSI i stigende trend og stigende volum.'
             },
+            'ORK.OL': {
+                'last_price': 78.50,
+                'signal': 'HOLD',
+                'rsi': 47.2,
+                'macd': -0.12,
+                'macd_signal': -0.10,
+                'support': 76.00,
+                'resistance': 82.00,
+                'volume': 750000,
+                'avg_volume': 720000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Orkla viser nøytrale tekniske signaler med flat RSI-trend og MACD nær nulllinjen.'
+            },
+            'AKSO.OL': {
+                'last_price': 44.65,
+                'signal': 'BUY',
+                'rsi': 68.4,
+                'macd': 0.48,
+                'macd_signal': 0.22,
+                'support': 42.00,
+                'resistance': 46.50,
+                'volume': 920000,
+                'avg_volume': 860000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Aker Solutions viser positive tekniske signaler med sterk RSI-trend og økende volum.'
+            },
+            'BAKKA.OL': {
+                'last_price': 615.20,
+                'signal': 'SELL',
+                'rsi': 35.6,
+                'macd': -1.20,
+                'macd_signal': -0.75,
+                'support': 600.00,
+                'resistance': 630.00,
+                'volume': 180000,
+                'avg_volume': 160000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Bakkafrost viser negative tekniske signaler med RSI i fallende trend og MACD under signallinjen.'
+            },
+            
+            # Global Stocks
+            'AAPL': {
+                'last_price': 185.70,
+                'signal': 'BUY',
+                'rsi': 62.5,
+                'macd': 0.43,
+                'macd_signal': 0.21,
+                'support': 178.00,
+                'resistance': 192.00,
+                'volume': 52000000,
+                'avg_volume': 48000000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Apple viser positive tekniske signaler med RSI i oppadgående trend og økende volum.'
+            },
+            'MSFT': {
+                'last_price': 390.20,
+                'signal': 'BUY',
+                'rsi': 67.8,
+                'macd': 1.25,
+                'macd_signal': 0.65,
+                'support': 375.00,
+                'resistance': 400.00,
+                'volume': 22000000,
+                'avg_volume': 19500000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Microsoft viser sterke tekniske signaler med både RSI og MACD i oppadgående trend.'
+            },
+            'TSLA': {
+                'last_price': 230.10,
+                'signal': 'SELL',
+                'rsi': 28.5,
+                'macd': -1.85,
+                'macd_signal': -0.95,
+                'support': 220.00,
+                'resistance': 250.00,
+                'volume': 89000000,
+                'avg_volume': 65000000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Tesla viser negative tekniske signaler med RSI i oversolgt område og MACD under signallinjen.'
+            },
+            'AMZN': {
+                'last_price': 178.90,
+                'signal': 'BUY',
+                'rsi': 58.2,
+                'macd': 0.78,
+                'macd_signal': 0.45,
+                'support': 172.00,
+                'resistance': 185.00,
+                'volume': 35000000,
+                'avg_volume': 32000000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Amazon viser positive tekniske signaler med RSI i opptrend og MACD over signallinjen.'
+            },
+            'GOOGL': {
+                'last_price': 155.50,
+                'signal': 'BUY',
+                'rsi': 61.2,
+                'macd': 0.65,
+                'macd_signal': 0.32,
+                'support': 150.00,
+                'resistance': 162.00,
+                'volume': 25000000,
+                'avg_volume': 22500000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Alphabet viser positive tekniske signaler med solid RSI-trend og økende volum.'
+            },
+            'META': {
+                'last_price': 483.85,
+                'signal': 'HOLD',
+                'rsi': 55.1,
+                'macd': 0.22,
+                'macd_signal': 0.18,
+                'support': 470.00,
+                'resistance': 495.00,
+                'volume': 18000000,
+                'avg_volume': 16500000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Meta viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD nær signallinjen.'
+            },
+            
+            # Crypto
             'BTC-USD': {
                 'last_price': 65432.10,
-                'signal': 'Buy',
+                'signal': 'BUY',
                 'rsi': 68.3,
                 'macd': 245.32,
                 'macd_signal': 180.45,
@@ -174,7 +270,7 @@ def technical():
             },
             'ETH-USD': {
                 'last_price': 3456.78,
-                'signal': 'Hold',
+                'signal': 'HOLD',
                 'rsi': 55.2,
                 'macd': 12.34,
                 'macd_signal': 10.56,
@@ -184,6 +280,86 @@ def technical():
                 'avg_volume': 14000000000,
                 'last_update': datetime.now().strftime('%Y-%m-%d'),
                 'signal_reason': 'Ethereum viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD nær signallinjen.'
+            },
+            'XRP-USD': {
+                'last_price': 0.5678,
+                'signal': 'HOLD',
+                'rsi': 49.8,
+                'macd': 0.0023,
+                'macd_signal': 0.0021,
+                'support': 0.55,
+                'resistance': 0.60,
+                'volume': 1800000000,
+                'avg_volume': 1650000000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Ripple viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD nær signallinjen.'
+            },
+            'ADA-USD': {
+                'last_price': 0.4532,
+                'signal': 'BUY',
+                'rsi': 63.5,
+                'macd': 0.0032,
+                'macd_signal': 0.0018,
+                'support': 0.42,
+                'resistance': 0.48,
+                'volume': 1200000000,
+                'avg_volume': 1100000000,
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'Cardano viser positive tekniske signaler med RSI i opptrend og økende volum.'
+            },
+            
+            # Currency
+            'EURUSD=X': {
+                'last_price': 1.0865,
+                'signal': 'BUY',
+                'rsi': 62.7,
+                'macd': 0.0012,
+                'macd_signal': 0.0008,
+                'support': 1.08,
+                'resistance': 1.09,
+                'volume': 'N/A',
+                'avg_volume': 'N/A',
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'EUR/USD viser positive tekniske signaler med RSI i opptrend og MACD over signallinjen.'
+            },
+            'USDJPY=X': {
+                'last_price': 151.23,
+                'signal': 'SELL',
+                'rsi': 32.8,
+                'macd': -0.021,
+                'macd_signal': -0.012,
+                'support': 150.00,
+                'resistance': 152.50,
+                'volume': 'N/A',
+                'avg_volume': 'N/A',
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'USD/JPY viser negative tekniske signaler med RSI i fallende trend og MACD under signallinjen.'
+            },
+            'GBPUSD=X': {
+                'last_price': 1.2654,
+                'signal': 'BUY',
+                'rsi': 64.2,
+                'macd': 0.0015,
+                'macd_signal': 0.0009,
+                'support': 1.26,
+                'resistance': 1.27,
+                'volume': 'N/A',
+                'avg_volume': 'N/A',
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'GBP/USD viser positive tekniske signaler med RSI i opptrend og MACD over signallinjen.'
+            },
+            'NOKUSD=X': {
+                'last_price': 0.0956,
+                'signal': 'HOLD',
+                'rsi': 48.9,
+                'macd': 0.0002,
+                'macd_signal': 0.0002,
+                'support': 0.094,
+                'resistance': 0.097,
+                'volume': 'N/A',
+                'avg_volume': 'N/A',
+                'last_update': datetime.now().strftime('%Y-%m-%d'),
+                'signal_reason': 'NOK/USD viser nøytrale tekniske signaler med RSI nær midtlinjen og MACD på samme nivå som signallinjen.'
             }
         }
         

@@ -1,16 +1,181 @@
 {% extends 'base.html' %}
-{% block title %}AI Analysis{% endblock %}
+{% block title %}AI Analyse | Aksjeradar{% endblock %}
 {% block content %}
-{% include 'analysis/_menu.html' %}
-<div class="container mt-4">
-  <h2>AI Analysis</h2>
+<div class="container">
+  <nav aria-label="breadcrumb" class="my-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="/">Hjem</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('analysis.index') }}">Analyse</a></li>
+      <li class="breadcrumb-item active">AI Analyse</li>
+    </ol>
+  </nav>
+  
   {% include 'analysis/_menu.html' %}
-  <form method="get" action="{{ url_for('analysis.ai') }}">
-    <div class="mb-3">
-      <label for="ticker" class="form-label">Enter Ticker Symbol</label>
-      <input type="text" class="form-control" id="ticker" name="ticker" placeholder="e.g. EQNR.OL" required>
+  
+  <div class="card border-0 shadow mb-4">
+    <div class="card-header bg-info text-white">
+      <h2 class="h5 mb-0">AI Analyse</h2>
     </div>
-    <button type="submit" class="btn btn-primary">Analyze</button>
-  </form>
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-8">
+          <p class="lead">Vår AI-analyse kombinerer tekniske indikatorer, markedssentiment og fundamentale faktorer for å gi deg en dypere innsikt i aksjer.</p>
+          <p>Få detaljerte analyser med:</p>
+          <ul>
+            <li>Tekniske faktorer og indikatorer (RSI, MACD, glidende gjennomsnitt)</li>
+            <li>Fundamentale faktorer og nøkkeltall</li>
+            <li>Markedssentiment og trendanalyse</li>
+            <li>Prismål og handelsanbefalinger</li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h5 class="h6 mb-3">Hvorfor bruke AI-analyse?</h5>
+              <div class="d-flex mb-2">
+                <div class="me-2"><i class="bi bi-check-circle-fill text-success"></i></div>
+                <div>Omfattende datapunkter analysert på sekunder</div>
+              </div>
+              <div class="d-flex mb-2">
+                <div class="me-2"><i class="bi bi-check-circle-fill text-success"></i></div>
+                <div>Objektiv vurdering uten emosjonell bias</div>
+              </div>
+              <div class="d-flex">
+                <div class="me-2"><i class="bi bi-check-circle-fill text-success"></i></div>
+                <div>Identifiserer mønster mennesker kan overse</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <form method="get" action="{{ url_for('analysis.ai') }}" class="mb-4">
+        <div class="input-group input-group-lg">
+          <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" id="ticker" name="ticker" placeholder="Skriv inn ticker (f.eks. EQNR.OL, AAPL)" required>
+          <button type="submit" class="btn btn-primary px-4">
+            Analyser
+          </button>
+        </div>
+        <div class="form-text">Skriv inn en aksjeticker for å få en AI-drevet analyse. For norske aksjer, bruk .OL etter tickeren (f.eks. EQNR.OL).</div>
+      </form>
+      
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="h6 mb-0">Oslo Børs</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <a href="{{ url_for('analysis.ai', ticker='EQNR.OL') }}" class="btn btn-outline-primary btn-sm d-flex justify-content-between align-items-center">
+                  <span>EQNR.OL - Equinor</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='DNB.OL') }}" class="btn btn-outline-primary btn-sm d-flex justify-content-between align-items-center">
+                  <span>DNB.OL - DNB Bank</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='YAR.OL') }}" class="btn btn-outline-primary btn-sm d-flex justify-content-between align-items-center">
+                  <span>YAR.OL - Yara</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='TEL.OL') }}" class="btn btn-outline-primary btn-sm d-flex justify-content-between align-items-center">
+                  <span>TEL.OL - Telenor</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='NHY.OL') }}" class="btn btn-outline-primary btn-sm d-flex justify-content-between align-items-center">
+                  <span>NHY.OL - Norsk Hydro</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+              <h5 class="h6 mb-0">Globale aksjer</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <a href="{{ url_for('analysis.ai', ticker='AAPL') }}" class="btn btn-outline-success btn-sm d-flex justify-content-between align-items-center">
+                  <span>AAPL - Apple</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='MSFT') }}" class="btn btn-outline-success btn-sm d-flex justify-content-between align-items-center">
+                  <span>MSFT - Microsoft</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='GOOGL') }}" class="btn btn-outline-success btn-sm d-flex justify-content-between align-items-center">
+                  <span>GOOGL - Alphabet</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='AMZN') }}" class="btn btn-outline-success btn-sm d-flex justify-content-between align-items-center">
+                  <span>AMZN - Amazon</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='TSLA') }}" class="btn btn-outline-success btn-sm d-flex justify-content-between align-items-center">
+                  <span>TSLA - Tesla</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-4">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-info text-white">
+              <h5 class="h6 mb-0">Krypto</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <a href="{{ url_for('analysis.ai', ticker='BTC-USD') }}" class="btn btn-outline-info btn-sm d-flex justify-content-between align-items-center">
+                  <span>BTC-USD - Bitcoin</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='ETH-USD') }}" class="btn btn-outline-info btn-sm d-flex justify-content-between align-items-center">
+                  <span>ETH-USD - Ethereum</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='XRP-USD') }}" class="btn btn-outline-info btn-sm d-flex justify-content-between align-items-center">
+                  <span>XRP-USD - Ripple</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='ADA-USD') }}" class="btn btn-outline-info btn-sm d-flex justify-content-between align-items-center">
+                  <span>ADA-USD - Cardano</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+                <a href="{{ url_for('analysis.ai', ticker='SOL-USD') }}" class="btn btn-outline-info btn-sm d-flex justify-content-between align-items-center">
+                  <span>SOL-USD - Solana</span>
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="alert alert-light border mt-2">
+        <div class="d-flex">
+          <div class="me-3">
+            <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+          </div>
+          <div>
+            <strong>Tips:</strong> AI-analysen fungerer best for likvide aksjer med god dekning. Analysen oppdateres kontinuerlig for å reflektere de siste markedsbevegelsene og nyhetene.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Autofokuser på søkefeltet når siden lastes
+    document.getElementById('ticker').focus();
+  });
+</script>
 {% endblock %}

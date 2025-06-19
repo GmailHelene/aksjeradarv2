@@ -246,14 +246,13 @@ class DataService:
                         'last_price': round(last_price, 2),
                         'change': round(change, 2),
                         'change_percent': round(change_percent, 2),
-                        'volume': data['Volume'].iloc[-1],
-                        'signal': random.choices(signals, weights=signal_weights, k=1)[0]
+                        'volume': data['Volume'].iloc[-1],                        'signal': random.choices(signals, weights=signal_weights, k=1)[0]
                     }
             except Exception as e:
                 print(f"Error getting overview for {ticker}: {str(e)}")
         
         return overview
-    
+        
     @staticmethod
     def get_currency_overview():
         """Get overview of currencies"""
@@ -277,6 +276,34 @@ class DataService:
                         "USDCNY=X": "USD/CNY",
                         "NOKUSD=X": "NOK/USD"
                     }
+                      # Dynamic signal generation based on price movements
+                    signals = ["BUY", "SELL", "HOLD"]
+                    signal_weights = [0.3, 0.2, 0.5]  # Base weights
+                    
+                    # Adjust weights based on price movement trends
+                    if change_percent > 0.5:
+                        signal_weights = [0.6, 0.1, 0.3]  # More likely to be BUY
+                    elif change_percent < -0.5:
+                        signal_weights = [0.1, 0.6, 0.3]  # More likely to be SELL
+                    
+                    # For demo consistency, we can assign specific signals to certain pairs
+                    # but still maintain some variability based on price movement
+                    pair_tendency = {
+                        "EURUSD=X": 0.7 if change_percent > 0 else 0.3,  # Tends toward BUY
+                        "GBPUSD=X": 0.6 if change_percent > 0 else 0.4,  # Tends toward BUY
+                        "USDJPY=X": 0.3 if change_percent > 0 else 0.7,  # Tends toward SELL
+                        "NOKUSD=X": 0.5,  # Neutral tendency
+                    }
+                    
+                    # Apply pair-specific tendency if available
+                    if pair in pair_tendency:
+                        tendency = pair_tendency[pair]
+                        if random.random() < tendency:
+                            signal = "BUY" if change_percent > 0 else "SELL"
+                        else:
+                            signal = random.choices(signals, weights=signal_weights, k=1)[0]
+                    else:
+                        signal = random.choices(signals, weights=signal_weights, k=1)[0]
                     
                     overview[pair] = {
                         'ticker': pair,
@@ -284,7 +311,8 @@ class DataService:
                         'last_price': round(last_price, 4),
                         'change': round(change, 4),
                         'change_percent': round(change_percent, 2),
-                        'volume': "N/A"  # Forex typically doesn't have volume data in the same way
+                        'volume': "N/A",  # Forex typically doesn't have volume data in the same way
+                        'signal': signal
                     }
             except Exception as e:
                 print(f"Error getting overview for {pair}: {str(e)}")

@@ -5,14 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Aksjeradar - Din aksje- og finansassistent{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#0d6efd">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    {% block extra_head %}{% endblock %}
+    {% block extra_head %}{% endblock %}    <style>
+        body {
+            background-color: #ffffff;
+            color: #212529;
+            min-height: 100vh;
+        }
+        .bg-dark {
+            background-color: #212529 !important;
+        }
+        .navbar-dark .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #ffffff;
+        }
+        .card {
+            border: 0;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        .bg-primary-gradient {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        }
+        .glossary {
+            cursor: help;
+            text-decoration: underline dotted;
+        }
+        .data-timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        main {
+            background-color: #ffffff;
+            min-height: calc(100vh - 160px);
+            padding-bottom: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .tooltip {
+            font-size: 0.85rem;
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
-    <!-- Navigation -->
+<body>
+    <!-- Top Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
@@ -24,110 +72,149 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="/">Hjem</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('stocks.oslo_list') }}">Aksjeoversikt</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house-door"></i> Hjem</a></li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Analyse
+                        <a class="nav-link dropdown-toggle" href="#" id="stocksDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-graph-up"></i> Aksjer
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('analysis.technical') }}">Teknisk Analyse</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="stocksDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('stocks.index') }}">Oversikt</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('stocks.oslo_list') }}">Oslo Børs</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('stocks.global_list') }}">Globale markeder</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('stocks.crypto_list') }}">Kryptovaluta</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('stocks.compare') }}">Sammenlign aksjer</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="analysisDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bar-chart"></i> Analyse
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="analysisDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('analysis.index') }}">Oversikt</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('analysis.technical') }}">Teknisk analyse</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('analysis.prediction') }}">Prisprediksjoner</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('analysis.recommendation') }}">Anbefalinger</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('analysis.ai') }}">AI-analyse</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('analysis.market_overview') }}">Markedsoversikt</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('portfolio.stock_tips') }}">Aksjetips</a></li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <form class="d-flex" action="{{ url_for('main.search') }}" method="get">
-                            <input class="form-control me-2" type="search" name="q" placeholder="Søk aksje..." aria-label="Search">
-                            <button class="btn btn-outline-light" type="submit">Søk</button>
-                        </form>
-                    </li>
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item dropdown ms-2">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="portfolioDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-briefcase"></i> Portefølje
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('portfolio.index') }}">Min Portefølje</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="portfolioDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('portfolio.index') }}">Min portefølje</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('portfolio.watchlist') }}">Favorittliste</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('portfolio.stock_tips') }}">Aksjetips</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('main.logout') }}">Logg ut</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('portfolio.create_portfolio') }}">Opprett ny portefølje</a></li>
                         </ul>
                     </li>
-                    {% else %}
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-outline-light me-2" href="{{ url_for('main.login') }}">Logg inn</a>
-                        <a class="btn btn-primary" href="{{ url_for('main.register') }}">Registrer deg</a>
-                    </li>
-                    {% endif %}
                 </ul>
+                <form class="d-flex me-2" action="{{ url_for('main.search') }}" method="get">
+                    <div class="input-group">
+                        <input type="search" name="q" class="form-control" placeholder="Søk aksjer..." aria-label="Søk">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+                {% if current_user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('portfolio.index') }}"><i class="bi bi-briefcase"></i> Min portefølje</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Innstillinger</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Logg ut</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="d-flex">
+                    <a href="{{ url_for('main.login') }}" class="btn btn-outline-light me-2">Logg inn</a>
+                    <a href="{{ url_for('main.register') }}" class="btn btn-primary">Registrer deg</a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="container py-4">
+    <!-- Main Content Area -->
+    <main class="py-4 bg-white">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="row">
-            <div class="col-12">
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
+        <div class="container mb-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+            {% endfor %}
         </div>
         {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
+    </main>    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4 mb-4 mb-md-0">
                     <h5>Aksjeradar</h5>
-                    <p class="text-muted">Din digitale aksje- og finansassistent</p>
-                    <p class="text-muted">© 2025 Aksjeradar. Alle rettigheter reservert.</p>
+                    <p class="small">Din digitale finansassistent for Oslo Børs og internasjonale markeder.</p>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <h5>Lenker</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="/" class="text-decoration-none text-light">Hjem</a></li>
-                        <li><a href="{{ url_for('stocks.oslo_list') }}" class="text-decoration-none text-light">Aksjeoversikt</a></li>
-                        <li><a href="{{ url_for('analysis.market_overview') }}" class="text-decoration-none text-light">Markedsoversikt</a></li>
-                        <li><a href="{{ url_for('portfolio.stock_tips') }}" class="text-decoration-none text-light">Aksjetips</a></li>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h6>Lenker</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="/" class="text-white-50">Hjem</a></li>
+                        <li><a href="{{ url_for('stocks.index') }}" class="text-white-50">Aksjer</a></li>
+                        <li><a href="{{ url_for('analysis.index') }}" class="text-white-50">Analyse</a></li>
+                        <li><a href="{{ url_for('portfolio.index') }}" class="text-white-50">Portefølje</a></li>
                     </ul>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h6>Verktøy</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{{ url_for('analysis.technical') }}" class="text-white-50">Teknisk analyse</a></li>
+                        <li><a href="{{ url_for('analysis.prediction') }}" class="text-white-50">Prisprediksjoner</a></li>
+                        <li><a href="{{ url_for('analysis.ai') }}" class="text-white-50">AI-analyse</a></li>
+                        <li><a href="{{ url_for('analysis.market_overview') }}" class="text-white-50">Markedsoversikt</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>Ordliste</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-white-50 glossary" title="Relative Strength Index - En momentumoscillator som måler hastigheten og endringen av prisbevegelser.">RSI</a> - Relative Strength Index</li>
+                        <li><a href="#" class="text-white-50 glossary" title="Moving Average Convergence Divergence - En trendindikator som viser forholdet mellom to glidende gjennomsnitt.">MACD</a> - Moving Average Convergence/Divergence</li>
+                        <li><a href="#" class="text-white-50 glossary" title="Et prisnivå hvor en aksje historisk har snudd oppover.">Støtte</a> - Support level</li>
+                        <li><a href="#" class="text-white-50 glossary" title="Et prisnivå hvor en aksje historisk har møtt motstand og snudd nedover.">Motstand</a> - Resistance level</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3 border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6 small">
+                    <p class="mb-0 text-white-50">&copy; {% now '%Y' %} Aksjeradar. Alle rettigheter reservert.</p>
+                </div>
+                <div class="col-md-6 text-md-end small">
+                    <p class="mb-0 text-white-50">Datakilder: Yahoo Finance, Oslo Børs | Oppdatert: {% now '%d.%m.%Y' %}</p>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Install app prompt -->
-    <div id="install-app" class="toast align-items-center text-white bg-primary border-0 position-fixed bottom-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body">
-                <strong>Installer Aksjeradar</strong><br>
-                Legg til appen på hjemskjermen din for raskere tilgang
-            </div>
-            <div class="d-flex align-items-center">
-                <button id="install-btn" class="btn btn-sm btn-light me-2">Installer</button>
-                <button type="button" class="btn-close btn-close-white me-2" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/main.js"></script>
+    <script>
+        // Enable tooltips everywhere
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"], .glossary'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
