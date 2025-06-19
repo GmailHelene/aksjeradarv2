@@ -3,6 +3,7 @@ from ..services.analysis_service import AnalysisService
 from ..services.ai_service import AIService
 from ..services.export_service import ExportService
 from ..services.data_service import DataService, OSLO_BORS_TICKERS, GLOBAL_TICKERS
+from ..utils.subscription import subscription_required
 import random
 import pandas as pd
 import time
@@ -12,6 +13,7 @@ from datetime import datetime
 analysis = Blueprint('analysis', __name__)
 
 @analysis.route('/')
+@subscription_required
 def index():
     oslo_stocks = DataService.get_oslo_bors_overview()
     global_stocks = DataService.get_global_stocks_overview()
@@ -49,6 +51,7 @@ def index():
     )
 
 @analysis.route('/technical')
+@subscription_required
 def technical():
     """Technical analysis view"""
     ticker = request.args.get('ticker')
@@ -383,6 +386,7 @@ def technical():
                               ticker=ticker)
 
 @analysis.route('/prediction', methods=['GET', 'POST'])
+@subscription_required
 def prediction():
     """Show price predictions for multiple stocks"""
     try:
@@ -438,6 +442,7 @@ def prediction():
         )
 
 @analysis.route('/recommendation')
+@subscription_required
 def recommendation():
     ticker = request.args.get('ticker')
     
@@ -526,6 +531,7 @@ def recommendation():
 
 
 @analysis.route('/ai', methods=['GET', 'POST'])
+@subscription_required
 def ai():
     """AI analysis view"""
     ticker = request.args.get('ticker')
@@ -551,6 +557,7 @@ def ai():
     
 
 @analysis.route('/market-overview')
+@subscription_required
 def market_overview():
     market_overview = DataService.get_market_overview()
     return render_template(
@@ -563,6 +570,7 @@ def market_overview():
 
 # Add new routes
 @analysis.route('/api/analysis/indicators', methods=['GET'])
+@subscription_required
 def get_indicators():
     """Get technical indicators for a stock"""
     symbol = request.args.get('symbol')
@@ -593,6 +601,7 @@ def get_indicators():
         return jsonify({"error": str(e)}), 500
 
 @analysis.route('/api/analysis/signals', methods=['GET'])
+@subscription_required
 def get_trading_signals():
     """Get trading signals for a stock"""
     symbol = request.args.get('symbol')
@@ -614,6 +623,7 @@ def get_trading_signals():
         return jsonify({"error": str(e)}), 500
 
 @analysis.route('/api/market-summary', methods=['GET'])
+@subscription_required
 def get_market_summary():
     """Get AI-generated market summary"""
     sector = request.args.get('sector')
@@ -624,6 +634,7 @@ def get_market_summary():
     return jsonify(summary)
 
 @analysis.route('/api/export/csv', methods=['POST'])
+@subscription_required
 def export_csv():
     """Export data to CSV"""
     data = request.json.get('data')
@@ -637,6 +648,7 @@ def export_csv():
     return jsonify(result)
 
 @analysis.route('/api/export/pdf', methods=['POST'])
+@subscription_required
 def export_pdf():
     """Export data to PDF"""
     data = request.json.get('data')
@@ -651,6 +663,7 @@ def export_pdf():
     return jsonify(result)
 
 @analysis.route('/api/email/send', methods=['POST'])
+@subscription_required
 def send_email():
     """Send email with report"""
     recipient = request.json.get('recipient')
@@ -666,6 +679,7 @@ def send_email():
     return jsonify(result)
 
 @analysis.route('/api/email/schedule', methods=['POST'])
+@subscription_required
 def schedule_email():
     """Schedule daily email report"""
     user_id = request.json.get('user_id')
@@ -680,6 +694,7 @@ def schedule_email():
     return jsonify(result)
 
 @analysis.route('/downloads/<path:filename>')
+@subscription_required
 def download_file(filename):
     """Download exported files"""
     return send_from_directory(current_app.config['EXPORT_FOLDER'], filename, as_attachment=True)

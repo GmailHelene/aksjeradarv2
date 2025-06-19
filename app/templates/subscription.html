@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Abonnement - Aksjeradar{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1>Aksjeradar Premium</h1>
+            <p class="lead">Få tilgang til alle funksjoner og analyser</p>
+        </div>
+    </div>
+
+    {% if subscription_active %}
+        <div class="alert alert-success text-center mb-5">
+            <h4 class="alert-heading">Du har et aktivt abonnement!</h4>
+            <p>Takk for at du støtter Aksjeradar. Du har full tilgang til alle funksjoner.</p>
+            {% if current_user.subscription_end %}
+                <p>Ditt abonnement er gyldig til: {{ current_user.subscription_end.strftime('%d.%m.%Y') }}</p>
+            {% endif %}
+        </div>
+    {% elif trial_remaining and trial_remaining > 0 %}
+        <div class="alert alert-info text-center mb-5">
+            <h4 class="alert-heading">Din gratis prøveperiode er aktiv!</h4>
+            <p>Du har <strong>{{ trial_remaining }} minutter</strong> igjen av din gratis prøveperiode.</p>
+            <p>Kjøp et abonnement nedenfor for å få uavbrutt tilgang til alle funksjoner.</p>
+        </div>
+    {% elif current_user.is_authenticated and current_user.trial_used %}
+        <div class="alert alert-warning text-center mb-5">
+            <h4 class="alert-heading">Din prøveperiode er utløpt</h4>
+            <p>Kjøp et abonnement nedenfor for å få tilgang til alle funksjoner igjen.</p>
+        </div>
+    {% elif current_user.is_authenticated and not current_user.trial_used %}
+        <div class="card mb-5">
+            <div class="card-body text-center">
+                <h4 class="card-title">Prøv Aksjeradar gratis</h4>
+                <p class="card-text">Start en 10-minutters gratis prøveperiode for å teste alle premium-funksjoner.</p>
+                <form action="{{ url_for('main.start_trial') }}" method="post">
+                    <button type="submit" class="btn btn-primary btn-lg">Start gratis prøveperiode</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center mb-5">
+            <h4 class="alert-heading">Logg inn for å starte</h4>
+            <p>Du må <a href="{{ url_for('main.login') }}">logge inn</a> eller <a href="{{ url_for('main.register') }}">registrere deg</a> for å starte en gratis prøveperiode eller kjøpe et abonnement.</p>
+        </div>
+    {% endif %}
+
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <h3>Månedlig</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h4 class="card-title text-center">99 kr <small class="text-muted">/måned</small></h4>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
+                        <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
+                        <li class="list-group-item">Teknisk analyse av alle aksjer</li>
+                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
+                        <li class="list-group-item">Avbryt når som helst</li>
+                    </ul>
+                    <div class="mt-auto text-center">
+                        {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                            <input type="hidden" name="subscription_type" value="monthly">
+                            <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
+                        </form>
+                        {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline-primary">Logg inn for å kjøpe</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header text-center bg-primary text-white">
+                    <h3>Årlig <span class="badge bg-warning">Best verdi</span></h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h4 class="card-title text-center">799 kr <small class="text-muted">/år</small></h4>
+                    <p class="text-center text-success mb-3">Spar 33% sammenlignet med månedlig</p>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
+                        <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
+                        <li class="list-group-item">Teknisk analyse av alle aksjer</li>
+                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
+                        <li class="list-group-item">Prioritert support</li>
+                    </ul>
+                    <div class="mt-auto text-center">
+                        {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                            <input type="hidden" name="subscription_type" value="yearly">
+                            <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
+                        </form>
+                        {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline-primary">Logg inn for å kjøpe</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header text-center">
+                    <h3>Livstid</h3>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h4 class="card-title text-center">2499 kr <small class="text-muted">engangsbeløp</small></h4>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
+                        <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
+                        <li class="list-group-item">Teknisk analyse av alle aksjer</li>
+                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
+                        <li class="list-group-item">Livstid med oppdateringer</li>
+                        <li class="list-group-item">Prioritert support</li>
+                    </ul>
+                    <div class="mt-auto text-center">
+                        {% if current_user.is_authenticated %}
+                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                            <input type="hidden" name="subscription_type" value="lifetime">
+                            <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
+                        </form>
+                        {% else %}
+                        <a href="{{ url_for('main.login') }}" class="btn btn-outline-primary">Logg inn for å kjøpe</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Vanlige spørsmål</h3>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqOne">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    Hva er inkludert i abonnementet?
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="faqOne" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Abonnementet gir deg full tilgang til alle funksjoner i Aksjeradar, inkludert AI-drevet aksjeanalyse, tekniske analyser, porteføljestyring, anbefalinger og historiske data.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    Kan jeg avbryte abonnementet?
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Ja, du kan enkelt avbryte månedlige eller årlige abonnementer når som helst. Abonnementet vil fortsette til slutten av inneværende betalingsperiode.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    Hvilke betalingsmetoder aksepterer dere?
+                                </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Vi aksepterer alle større kredittkort, debetkort og Vipps.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="faqFour">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    Har dere en refusjonspolicy?
+                                </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="faqFour" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Vi tilbyr 14 dagers pengene-tilbake-garanti for nye abonnenter. Kontakt oss for refusjon innen denne perioden.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

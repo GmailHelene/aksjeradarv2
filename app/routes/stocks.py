@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from ..services.data_service import DataService
 from ..services.analysis_service import AnalysisService
 from flask_login import current_user
+from ..utils.subscription import subscription_required
 from datetime import datetime, timedelta
 
 stocks = Blueprint('stocks', __name__)

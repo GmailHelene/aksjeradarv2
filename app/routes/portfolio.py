@@ -6,12 +6,14 @@ from ..models.stock import Watchlist, WatchlistStock
 from ..services.data_service import DataService
 from ..services.analysis_service import AnalysisService
 from ..services.ai_service import AIService
+from ..utils.subscription import subscription_required
 from datetime import datetime, timedelta
 
 portfolio = Blueprint('portfolio', __name__)
 
 @portfolio.route('/')
 @login_required
+@subscription_required
 def index():
     """Show user's portfolio"""
     try:
@@ -63,6 +65,7 @@ def index():
 
 @portfolio.route('/create', methods=['GET', 'POST'])
 @login_required
+@subscription_required
 def create_portfolio():
     """Create a new portfolio"""
     if request.method == 'POST':
@@ -75,6 +78,7 @@ def create_portfolio():
     return render_template('portfolio/create.html')
 
 @portfolio.route('/view/<int:id>')
+@subscription_required
 def view_portfolio(id):
     """View a specific portfolio"""
     portfolio = Portfolio.query.get_or_404(id)
@@ -124,6 +128,7 @@ def view_portfolio(id):
 
 @portfolio.route('/portfolio/<int:id>/add', methods=['GET', 'POST'])
 @login_required
+@subscription_required
 def add_stock_to_portfolio(id):
     """Add a stock to a specific portfolio"""
     portfolio = Portfolio.query.get_or_404(id)
@@ -173,6 +178,7 @@ def add_stock_to_portfolio(id):
 
 @portfolio.route('/portfolio/<int:id>/remove/<int:stock_id>', methods=['POST'])
 @login_required
+@subscription_required
 def remove_stock_from_portfolio(id, stock_id):
     """Remove a stock from a specific portfolio"""
     portfolio = Portfolio.query.get_or_404(id)

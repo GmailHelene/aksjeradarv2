@@ -1,1 +1,2 @@
-Aksjeradar version timestamp: 2025-06-19 08:29:06
+Aksjeradar version timestamp: 2025-06-19 12:42:40
+Build: 1750336960
