@@ -6,12 +6,25 @@ from datetime import datetime, timedelta
 # Define some constants for demo data
 OSLO_BORS_TICKERS = [
     "EQNR.OL", "DNB.OL", "TEL.OL", "YAR.OL", "NHY.OL", "AKSO.OL", 
-    "MOWI.OL", "ORK.OL", "SALM.OL", "AKERBP.OL"
+    "MOWI.OL", "ORK.OL", "SALM.OL", "AKERBP.OL", "AUSS.OL", "AZT.OL",
+    "BAKKA.OL", "BWLPG.OL", "CRAYN.OL", "ENTRA.OL", "FLNG.OL", "GOGL.OL",
+    "GJF.OL", "HEX.OL", "KOG.OL", "MEDI.OL", "ODF.OL", "PGS.OL",
+    "SCHA.OL", "SCATC.OL", "SCHB.OL", "SRBANK.OL", "STB.OL", "SUBC.OL",
+    "TGS.OL", "TOM.OL", "VEI.OL", "VIZ.OL", "AKVA.OL", "AKER.OL",
+    "ASTK.OL", "ADE.OL", "BWE.OL", "BMA.OL", "BGBIO.OL", "COV.OL",
+    "DAT.OL", "ELABS.OL", "IDEX.OL", "KID.OL", "KOA.OL", "NAVA.OL",
+    "NORD.OL", "NSKOG.OL", "OTS.OL", "PEN.OL", "RECSI.OL", "SADG.OL",
+    "SOFF.OL", "ULTI.OL", "XXL.OL", "ZAL.OL"
 ]
 
 GLOBAL_TICKERS = [
     "AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", 
-    "JPM", "BAC", "JNJ"
+    "JPM", "BAC", "JNJ", "PG", "V", "MA", "UNH", "HD", "DIS",
+    "NFLX", "PYPL", "ADBE", "CRM", "INTC", "CSCO", "CMCSA", "PEP",
+    "KO", "T", "VZ", "ABT", "MRK", "PFE", "TMO", "ABBV", "AVGO",
+    "ACN", "TXN", "QCOM", "COST", "WMT", "NKE", "MCD", "SBUX",
+    "AMD", "IBM", "GS", "MS", "C", "CVX", "XOM", "BA", "CAT",
+    "MMM", "GE", "HON", "LMT", "RTX", "BLK", "SCHW"
 ]
 
 class DataService:

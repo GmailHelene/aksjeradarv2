@@ -59,7 +59,24 @@
                                         {% elif ticker == 'MOWI.OL' %}Mowi
                                         {% elif ticker == 'ORK.OL' %}Orkla
                                         {% elif ticker == 'SALM.OL' %}SalMar
-                                        {% else %}{{ stock.name|default(ticker) }}{% endif %}
+                                        {% elif ticker == 'AKERBP.OL' %}Aker BP
+                                        {% elif ticker == 'BAKKA.OL' %}Bakkafrost
+                                        {% elif ticker == 'SCHA.OL' %}Schibsted
+                                        {% elif ticker == 'SCHB.OL' %}Schibsted B
+                                        {% elif ticker == 'STB.OL' %}Storebrand
+                                        {% elif ticker == 'GJF.OL' %}Gjensidige Forsikring
+                                        {% elif ticker == 'KOG.OL' %}Kongsberg Gruppen
+                                        {% elif ticker == 'GOGL.OL' %}Golden Ocean Group
+                                        {% elif ticker == 'FLNG.OL' %}Flex LNG
+                                        {% elif ticker == 'TGS.OL' %}TGS
+                                        {% elif ticker == 'TOM.OL' %}Tomra Systems
+                                        {% elif ticker == 'SUBC.OL' %}Subsea 7
+                                        {% elif ticker == 'PGS.OL' %}PGS
+                                        {% elif ticker == 'VEI.OL' %}Veidekke
+                                        {% elif ticker == 'ODF.OL' %}Odfjell Drilling
+                                        {% elif ticker == 'SRBANK.OL' %}SpareBank 1 SR-Bank
+                                        {% elif ticker == 'AUSS.OL' %}Austevoll Seafood
+                                        {% else %}{{ stock.name|default(ticker|replace('.OL', '')) }}{% endif %}
                                     {% elif title == 'Global Markets' %}
                                         {% if ticker == 'AAPL' %}Apple Inc
                                         {% elif ticker == 'MSFT' %}Microsoft Corporation
@@ -69,6 +86,19 @@
                                         {% elif ticker == 'TSLA' %}Tesla Inc
                                         {% elif ticker == 'NVDA' %}NVIDIA Corporation
                                         {% elif ticker == 'JPM' %}JPMorgan Chase & Co
+                                        {% elif ticker == 'BAC' %}Bank of America
+                                        {% elif ticker == 'JNJ' %}Johnson & Johnson
+                                        {% elif ticker == 'V' %}Visa Inc
+                                        {% elif ticker == 'PG' %}Procter & Gamble
+                                        {% elif ticker == 'HD' %}Home Depot
+                                        {% elif ticker == 'MA' %}Mastercard
+                                        {% elif ticker == 'UNH' %}UnitedHealth Group
+                                        {% elif ticker == 'DIS' %}Walt Disney
+                                        {% elif ticker == 'NFLX' %}Netflix
+                                        {% elif ticker == 'INTC' %}Intel
+                                        {% elif ticker == 'CSCO' %}Cisco Systems
+                                        {% elif ticker == 'XOM' %}Exxon Mobil
+                                        {% elif ticker == 'CVX' %}Chevron
                                         {% else %}{{ stock.name|default(ticker) }}{% endif %}
                                     {% elif title == 'Cryptocurrencies' %}
                                         {% if ticker == 'BTC-USD' %}Bitcoin
@@ -76,7 +106,12 @@
                                         {% elif ticker == 'XRP-USD' %}Ripple
                                         {% elif ticker == 'LTC-USD' %}Litecoin
                                         {% elif ticker == 'ADA-USD' %}Cardano
-                                        {% else %}{{ stock.name|default(ticker) }}{% endif %}
+                                        {% elif ticker == 'SOL-USD' %}Solana
+                                        {% elif ticker == 'DOT-USD' %}Polkadot
+                                        {% elif ticker == 'AVAX-USD' %}Avalanche
+                                        {% elif ticker == 'DOGE-USD' %}Dogecoin
+                                        {% elif ticker == 'SHIB-USD' %}Shiba Inu
+                                        {% else %}{{ stock.name|default(ticker|replace('-USD', '')) }}{% endif %}
                                     {% else %}
                                         {{ stock.name|default(ticker) }}
                                     {% endif %}
@@ -157,6 +192,20 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center p-3">
+            <div class="text-muted small">Viser {{ stocks|length }} instrumenter</div>
+            <nav aria-label="Pagination">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link" href="#">Forrige</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Neste</a></li>
+                </ul>
+            </nav>
         </div>
         {% if title == 'Oslo Børs' or title == 'Global Markets' %}
         <div class="card-footer text-center py-3">

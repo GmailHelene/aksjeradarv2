@@ -4,19 +4,19 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="bg-primary-gradient text-white py-5">
-    <div class="container">
+<section class="bg-primary-gradient text-white py-4">
+    <div class="container py-2">
         <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h1 class="display-4 fw-bold mb-3">Aksjeradar</h1>
-                <p class="lead mb-4">Din digitale aksje- og finansassistent for Oslo Børs og internasjonale markeder. Få innsikt, analyser og porteføljestyring - alt på ett sted.</p>
+            <div class="col-lg-8 mb-3 mb-lg-0">
+                <h1 class="display-5 fw-bold mb-2">Aksjeradar</h1>
+                <p class="lead mb-3">Din digitale aksje- og finansassistent for Oslo Børs og internasjonale markeder.</p>
                 <div class="d-grid gap-2 d-md-flex">
-                    <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-light btn-lg px-4 me-md-2"><i class="bi bi-graph-up"></i> Utforsk aksjer</a>
-                    <a href="{{ url_for('analysis.technical') }}" class="btn btn-outline-light btn-lg px-4"><i class="bi bi-bar-chart"></i> Teknisk analyse</a>
+                    <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-light px-4 me-md-2"><i class="bi bi-graph-up"></i> Utforsk aksjer</a>
+                    <a href="{{ url_for('analysis.technical') }}" class="btn btn-outline-light px-4"><i class="bi bi-bar-chart"></i> Teknisk analyse</a>
                 </div>
             </div>
-            <div class="col-lg-6 text-center">
-                <img src="/static/images/logo-512.png" alt="Aksjeradar Logo" class="img-fluid" style="max-width: 300px;">
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <img src="/static/images/logo-192.png" alt="Aksjeradar Logo" class="img-fluid" style="max-width: 120px;">
             </div>
         </div>
     </div>
