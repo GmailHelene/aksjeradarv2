@@ -4,26 +4,41 @@ import multiprocessing
 # Server socket
 bind = "0.0.0.0:" + os.environ.get("PORT", "8080")
 
-# Worker processes
+# Worker processes - automatically scale based on CPU cores
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = 'sync'
 worker_connections = 1000
-timeout = 120
+timeout = 120  # 2 minutes timeout
 keepalive = 2
 
 # Logging
 errorlog = '-'
-loglevel = 'debug'
+loglevel = 'info'  # Changed from debug to info for production
 accesslog = '-'
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 # Server mechanics
 daemon = False
 preload_app = True
-reload = True
+reload = False  # Disabled reload for production
 
 # Process naming
 proc_name = 'aksjeradar'
+
+# Performance tuning
+max_requests = 1000
+max_requests_jitter = 50
+graceful_timeout = 30
+limit_request_line = 4094
+limit_request_fields = 100
+
+# SSL configuration for proxy support
+forwarded_allow_ips = '*'  # Trust X-Forwarded-* headers from all IPs
+secure_scheme_headers = {
+    'X-FORWARDED-PROTOCOL': 'ssl',
+    'X-FORWARDED-PROTO': 'https',
+    'X-FORWARDED-SSL': 'on'
+}
 
 # Server hooks
 def on_starting(server):
@@ -34,9 +49,20 @@ def on_starting(server):
     if app_dir not in sys.path:
         sys.path.insert(0, app_dir)
     server.log.info("Starting Aksjeradar application")
+    
+    # Log important paths and configurations
     server.log.info(f"Current directory: {app_dir}")
     server.log.info(f"Python path: {sys.path}")
+    server.log.info(f"Number of workers: {workers}")
+    server.log.info(f"Using worker class: {worker_class}")
     
+    # Verify database configuration
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        server.log.info("Database URL is configured")
+    else:
+        server.log.error("No DATABASE_URL found in environment!")
+        
     # Check if migrations directory exists
     migrations_dir = os.path.join(app_dir, 'migrations')
     if os.path.exists(migrations_dir):
@@ -50,28 +76,5 @@ def on_starting(server):
         server.log.error(f"Migrations directory NOT found at: {migrations_dir}")
 
 def post_fork(server, worker):
-    server.log.info(f"Worker spawned (pid: {worker.pid})")
-
-def pre_fork(server, worker):
-    pass
-
-def pre_exec(server):
-    server.log.info("Forked child, re-executing.")
-
-def when_ready(server):
-    server.log.info("Server is ready. Spawning workers")
-
-def worker_int(worker):
-    worker.log.info("worker received INT or QUIT signal")
-
-def worker_abort(worker):
-    worker.log.info("worker received SIGABRT signal")
-
-def worker_exit(server, worker):
-    # Create version file on worker exit to ensure it's updated
-    try:
-        from create_version import create_timestamp
-        timestamp = create_timestamp()
-        server.log.info(f"Worker exiting, updated version timestamp: {timestamp}")
-    except Exception as e:
-        server.log.error(f"Error creating version timestamp: {e}")
+    """Log after a worker has been forked"""
+    server.log.info(f"Worker {worker.pid} forked")
