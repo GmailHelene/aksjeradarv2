@@ -16,8 +16,8 @@ def index():
     # Get most active stocks
     oslo_stocks = DataService.get_oslo_bors_overview(limit=20)  # Increased limit
     global_stocks = DataService.get_global_stocks_overview(limit=20)  # Increased limit
-    crypto_data = DataService.get_crypto_overview(limit=10)  # Added crypto
-    currency_data = DataService.get_currency_overview(limit=10)  # Added currency
+    crypto_data = DataService.get_crypto_list(per_page=10)  # Using the correct method
+    currency_data = DataService.get_currency_list()[:10]  # Using the correct method
     
     return render_template(
         'stocks/index.html',
@@ -92,7 +92,7 @@ def global_list():
 
 @stocks.route('/list/crypto')
 @trial_required
-def crypto():
+def crypto_list():
     """Show cryptocurrency list"""
     page = request.args.get('page', 1, type=int)
     per_page = 50  # Increased number of items per page

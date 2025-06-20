@@ -212,3 +212,28 @@ class DataService:
         except Exception as e:
             logger.error(f"Error fetching info for {ticker}: {str(e)}")
             return None
+
+    @staticmethod
+    def get_market_overview():
+        """Get overview of different markets for the dashboard"""
+        try:
+            # Get a few top stocks from each market
+            oslo_stocks = DataService.get_oslo_bors_overview(limit=5)
+            global_stocks = DataService.get_global_stocks_overview(limit=5)
+            cryptos = DataService.get_crypto_list(per_page=5)
+            currencies = DataService.get_currency_list()[:5] if DataService.get_currency_list() else []
+            
+            return {
+                'oslo_stocks': oslo_stocks,
+                'global_stocks': global_stocks,
+                'cryptos': cryptos,
+                'currencies': currencies
+            }
+        except Exception as e:
+            logger.error(f"Error getting market overview: {str(e)}")
+            return {
+                'oslo_stocks': [],
+                'global_stocks': [],
+                'cryptos': [],
+                'currencies': []
+            }

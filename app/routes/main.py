@@ -66,10 +66,10 @@ def index():
         global_stocks = DataService.get_global_stocks_overview()
         
         # Hent kryptovaluta
-        crypto = DataService.get_crypto_data()
+        crypto = DataService.get_crypto_list()
         
         # Hent valutadata
-        currency = DataService.get_currency_data()
+        currency = DataService.get_currency_list()
     except Exception as e:
         print(f"Error getting data for index page: {str(e)}")
     
