@@ -2,15 +2,9 @@ from flask import Flask, render_template, request
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager
 
-# Initialize Flask extensions
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-login_manager.login_view = 'main.login'
+# Import extensions from extensions.py
+from .extensions import db, migrate, login_manager
 
 def create_app():
     app = Flask(__name__)
