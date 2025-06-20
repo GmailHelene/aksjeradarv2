@@ -1,67 +1,48 @@
-// Basic functionality for Aksjeradar app
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Aksjeradar app initialized');
-    
-    // Initialize Bootstrap components
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    if (typeof bootstrap !== 'undefined') {
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    }
-});
-
-// Initialize tooltips
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if bootstrap is loaded
-    if (typeof bootstrap !== 'undefined') {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
+    // Mode selector functionality
+    const modeSelector = document.getElementById('mode-selector');
+    if (modeSelector) {
+        const modeLinks = modeSelector.querySelectorAll('.mode-link');
+        const modeForm = document.getElementById('mode-form');
+        const modeInput = document.getElementById('app_mode_input');
+        
+        modeLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const mode = this.getAttribute('data-mode');
+                modeInput.value = mode;
+                modeForm.submit();
+            });
         });
     }
     
-    // Format number inputs
-    const numberInputs = document.querySelectorAll('input[type="number"]');
-    numberInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            if (this.value < 0) {
-                this.value = 0;
-            }
-        });
-    });
+    // Format dates to be more user-friendly
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    }
+    
+    // Helper to check if a reminder is due soon (within 24 hours)
+    function isDueSoon(dateString) {
+        const now = new Date();
+        const dueDate = new Date(dateString);
+        const diff = dueDate - now;
+        const hoursDiff = diff / (1000 * 60 * 60);
+        return hoursDiff > 0 && hoursDiff <= 24;
+    }
+    
+    // Helper to check if a reminder is overdue
+    function isOverdue(dateString) {
+        const now = new Date();
+        const dueDate = new Date(dateString);
+        return dueDate < now;
+    }
+    
+    // Export utilities for other scripts
+    window.appUtils = {
+        formatDate: formatDate,
+        isDueSoon: isDueSoon,
+        isOverdue: isOverdue
+    };
 });
 
-// Utility function to format currency
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(amount);
-}
-
-// Utility function to format percentage
-function formatPercentage(percentage) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'percent',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(percentage / 100);
-}
-
-// Eksempel på kode som viser en oppdateringsmelding
-let newVersionAvailable = false;
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (newVersionAvailable) {
-      document.getElementById('update-notification').style.display = 'block';
-    }
-  });
-  
-  navigator.serviceWorker.ready.then(reg => {
-    reg.addEventListener('updatefound', () => {
-      newVersionAvailable = true;
-    });
-  });
-}
