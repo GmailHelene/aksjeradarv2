@@ -4,8 +4,8 @@ import multiprocessing
 # Server socket
 bind = "0.0.0.0:" + os.environ.get("PORT", "8080")
 
-# Worker processes - automatically scale based on CPU cores
-workers = multiprocessing.cpu_count() * 2 + 1
+# Worker processes - fixed number for Railway
+workers = 4  # Fixed number of workers for Railway's resource limits
 worker_class = 'sync'
 worker_connections = 1000
 timeout = 120  # 2 minutes timeout

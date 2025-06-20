@@ -11,6 +11,19 @@ logger = logging.getLogger(__name__)
 cg = CoinGeckoAPI()
 cr = CurrencyRates()
 
+# Define stock tickers
+OSLO_BORS_TICKERS = [
+    'EQNR.OL', 'DNB.OL', 'AKSO.OL', 'YAR.OL', 'TEL.OL',
+    'MOWI.OL', 'NHY.OL', 'ORK.OL', 'SALM.OL', 'BWLPG.OL',
+    'AKRBP.OL', 'SUBC.OL', 'SCHA.OL', 'GJF.OL', 'KONGB.OL'
+]
+
+GLOBAL_TICKERS = [
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META',
+    'NVDA', 'TSLA', 'JPM', 'V', 'WMT',
+    'JNJ', 'PG', 'MA', 'UNH', 'HD'
+]
+
 class DataService:
     @staticmethod
     def get_stock_data(ticker, period='1d', interval='1m'):
@@ -27,14 +40,8 @@ class DataService:
     def get_oslo_bors_overview(limit=20):
         """Get overview of Oslo Børs stocks with guaranteed fields"""
         stocks = []
-        oslo_tickers = [
-            "EQNR.OL", "DNB.OL", "TEL.OL", "YAR.OL", "NHY.OL", "AKSO.OL", 
-            "MOWI.OL", "ORK.OL", "SALM.OL", "AKERBP.OL", "AUSS.OL", "AZT.OL",
-            "BAKKA.OL", "BWLPG.OL", "CRAYN.OL", "ENTRA.OL", "FLNG.OL", "GOGL.OL"
-        ]
-        
         try:
-            for ticker in oslo_tickers[:limit]:
+            for ticker in OSLO_BORS_TICKERS[:limit]:
                 try:
                     stock_data = DataService.get_stock_data(ticker)
                     info = DataService.get_real_stock_info(ticker)
@@ -74,14 +81,8 @@ class DataService:
     def get_global_stocks_overview(limit=20):
         """Get overview of global stocks with guaranteed fields"""
         stocks = []
-        global_tickers = [
-            "AAPL", "MSFT", "AMZN", "GOOGL", "META", "TSLA", "NVDA", 
-            "JPM", "BAC", "JNJ", "PG", "V", "MA", "UNH", "HD", "DIS",
-            "NFLX", "PYPL", "ADBE", "CRM"
-        ]
-        
         try:
-            for ticker in global_tickers[:limit]:
+            for ticker in GLOBAL_TICKERS[:limit]:
                 try:
                     stock_data = DataService.get_stock_data(ticker)
                     info = DataService.get_real_stock_info(ticker)

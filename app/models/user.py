@@ -14,14 +14,19 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     portfolios = db.relationship('Portfolio', backref='user', lazy='dynamic')
     watchlists = db.relationship('Watchlist', backref='user', lazy='dynamic')
-      # Subscription fields
+    
+    # Subscription fields
     has_subscription = db.Column(db.Boolean, default=False)
     subscription_type = db.Column(db.String(20), default='free')  # 'free', 'monthly', 'yearly', 'lifetime'
     subscription_start = db.Column(db.DateTime, nullable=True)
     subscription_end = db.Column(db.DateTime, nullable=True)
     trial_used = db.Column(db.Boolean, default=False)
     trial_start = db.Column(db.DateTime, nullable=True)
-    stripe_customer_id = db.Column(db.String(128), nullable=True)  # For å lagre Stripe Customer ID
+    
+    # Stripe fields
+    stripe_customer_id = db.Column(db.String(255), nullable=True)
+    subscription_id = db.Column(db.String(255), nullable=True)
+    subscription_status = db.Column(db.String(50), nullable=True)
     
     def __repr__(self):
         return f'<User {self.username}>'

@@ -19,6 +19,11 @@ def init_database_direct():
         
         # Get database URI from environment or use default
         database_uri = os.environ.get('DATABASE_URL') or 'sqlite:///app/aksjeradar.db'
+        
+        # Fix PostgreSQL URL format if needed
+        if database_uri.startswith('postgres://'):
+            database_uri = database_uri.replace('postgres://', 'postgresql://', 1)
+        
         logger.info(f"Using database URI: {database_uri}")
         
         # Create engine and connect to database
