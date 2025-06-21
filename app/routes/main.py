@@ -23,15 +23,22 @@ def init_stripe():
     """Initialize Stripe with error handling"""
     try:
         stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
-        # Test the connection by making a simple API call
-        stripe.Price.list(limit=1)
-        current_app.logger.info('Stripe initialized successfully')
+        
+        # Only test connection in real production (Railway)
+        if current_app.config.get('IS_REAL_PRODUCTION'):
+            # Test the connection by making a simple API call
+            stripe.Price.list(limit=1)
+            current_app.logger.info('Stripe initialized successfully')
+        else:
+            current_app.logger.info('Stripe initialized with dummy keys for development')
     except stripe.error.AuthenticationError as e:
         current_app.logger.error(f'Stripe authentication failed: {str(e)}')
-        raise
+        if current_app.config.get('IS_REAL_PRODUCTION'):
+            raise
     except Exception as e:
         current_app.logger.error(f'Stripe initialization failed: {str(e)}')
-        raise
+        if current_app.config.get('IS_REAL_PRODUCTION'):
+            raise
 
 # Initialize Stripe when the blueprint is registered
 @main.record_once
@@ -40,13 +47,17 @@ def on_register(state):
         # Set Stripe API key
         stripe.api_key = state.app.config['STRIPE_SECRET_KEY']
         
-        # Test the connection by making a simple API call
-        stripe.Price.list(limit=1)
-        state.app.logger.info('Stripe initialized successfully')
+        # Only test connection in real production (Railway)
+        if state.app.config.get('IS_REAL_PRODUCTION'):
+            # Test the connection by making a simple API call
+            stripe.Price.list(limit=1)
+            state.app.logger.info('Stripe initialized successfully')
+        else:
+            state.app.logger.info('Stripe initialized with dummy keys for development')
     except Exception as e:
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
-        if state.app.config.get('FLASK_ENV') == 'production':
-            # In production, we want to fail fast if Stripe isn't configured
+        if state.app.config.get('IS_REAL_PRODUCTION'):
+            # Only raise in real production (Railway)
             raise
 
 @main.route('/')
