@@ -49,48 +49,30 @@ class User(UserMixin, db.Model):
         return False
     
     def is_in_trial_period(self):
-        """Check if the user is in their free trial period (10 minutes)"""
-        if not self.trial_used or not self.trial_start:
+        """Check if the user is in their trial period"""
+        if self.is_admin or self.email == 'helene721@gmail.com':
+            return True
+            
+        if not self.trial_start:
             return False
-        
-        # Trial period is 10 minutes
-        trial_end = self.trial_start + timedelta(minutes=10)
+            
+        trial_end = self.trial_start + timedelta(days=14)
         return datetime.utcnow() <= trial_end
-    
-    def is_trial_expired(self):
-        """Check if the trial period has expired"""
-        if not self.trial_used:
-            return False
-        
-        # Trial period is 10 minutes
-        trial_end = self.trial_start + timedelta(minutes=10)
-        return datetime.utcnow() > trial_end
     
     def has_active_subscription(self):
         """Check if the user has an active subscription"""
-        # If user has a subscription and it's not expired
-        if self.has_subscription and self.subscription_end:
-            return datetime.utcnow() <= self.subscription_end
-        
-        # Or if they have a lifetime subscription
-        if self.has_subscription and self.subscription_type == 'lifetime':
+        if self.is_admin or self.email == 'helene721@gmail.com':
             return True
-        
-        # Or if they're in trial period
+            
+        if self.subscription_type in ['monthly', 'yearly', 'lifetime'] and self.subscription_end:
+            return datetime.utcnow() <= self.subscription_end
+            
         return self.is_in_trial_period()
     
-    def can_access_content(self):
-        """Check if the user can access premium content"""
-        # If user has an active subscription
-        if self.has_active_subscription():
-            return True
-        
-        # If user hasn't started trial yet
-        if not self.trial_used:
-            return True
-        
-        # If user is in trial period
-        return self.is_in_trial_period()
+    @property
+    def is_premium(self):
+        """Check if user has premium access (either admin, specific email, or active subscription)"""
+        return self.is_admin or self.email == 'helene721@gmail.com' or self.has_active_subscription()
     
     def subscription_days_left(self):
         """Return the number of days left in the subscription"""

@@ -39,17 +39,19 @@ def subscription_required(f):
         if current_user.has_active_subscription():
             return f(*args, **kwargs)
         
-        # If user has used their trial but it has expired
-        if current_user.trial_used and not current_user.is_in_trial_period():
-            flash('Din gratis prøveperiode er utløpt. Vennligst abonner for å fortsette.', 'warning')
-            return redirect(url_for('main.subscription'))
+        # Check trial status and handle accordingly
+        if hasattr(current_user, 'trial_used'):
+            # If trial is used and expired, or no active subscription
+            if current_user.trial_used and not current_user.is_in_trial_period():
+                flash('Din prøveperiode er utløpt. Velg et abonnement for å fortsette.', 'warning')
+                return redirect(url_for('main.subscription', expired=True))
+            
+            # If user hasn't used their trial yet
+            if not current_user.trial_used:
+                flash('Start din gratis prøveperiode for å få tilgang til alle funksjoner.', 'info')
+                return redirect(url_for('main.subscription', trial=True))
         
-        # If user hasn't used their trial yet, redirect to start trial
-        if not current_user.trial_used:
-            flash('Start din gratis prøveperiode for å få tilgang til alle funksjoner.', 'info')
-            return redirect(url_for('main.subscription'))
-        
-        # Redirect to subscription page
+        # Default: Redirect to subscription page for non-subscribers
         flash('Du trenger et aktivt abonnement for å få tilgang til denne funksjonen.', 'warning')
         return redirect(url_for('main.subscription'))
     

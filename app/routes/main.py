@@ -47,7 +47,6 @@ def on_register(state):
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
 
 @main.route('/')
-@trial_required
 def index():
     """Home page"""
     try:
@@ -56,6 +55,12 @@ def index():
         global_stocks = DataService.get_global_stocks_overview(limit=5)
         crypto = DataService.get_crypto_overview(limit=5)
         currency = DataService.get_currency_overview()
+        
+        # Check if user needs to be prompted about trial/subscription
+        show_trial_prompt = False
+        if current_user.is_authenticated:
+            if not current_user.is_premium and not current_user.trial_used:
+                show_trial_prompt = True
         
         return render_template(
             'index.html',
@@ -324,18 +329,29 @@ def privacy_policy():
 
 @main.route('/subscription')
 def subscription():
-    """Subscription page for premium features"""
-    trial_remaining = None
-    if current_user.is_authenticated:
-        if current_user.is_in_trial_period():
-            # Calculate remaining trial time in minutes
-            now = datetime.utcnow()
-            trial_end = current_user.trial_start + timedelta(minutes=10)
-            trial_remaining = max(0, int((trial_end - now).total_seconds() / 60))
+    """Show subscription options"""
+    show_trial = request.args.get('trial', False)
+    is_expired = request.args.get('expired', False)
     
+    # If trial is expired, show the subscription template with expired message
+    if is_expired:
+        return render_template('subscription.html', 
+                             show_trial=False,
+                             is_expired=True,
+                             title="Prøveperioden er utløpt")
+    
+    # If trial is available, show trial option
+    if show_trial:
+        return render_template('subscription.html', 
+                             show_trial=True,
+                             is_expired=False,
+                             title="Start din prøveperiode")
+    
+    # Default view shows all subscription options
     return render_template('subscription.html', 
-                          trial_remaining=trial_remaining,
-                          subscription_active=current_user.is_authenticated and current_user.has_active_subscription() if current_user.is_authenticated else False)
+                         show_trial=False,
+                         is_expired=False,
+                         title="Velg abonnement")
 
 @main.route('/start-trial', methods=['POST'])
 @login_required

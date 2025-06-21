@@ -23,17 +23,28 @@
                 <p>Ditt abonnement er gyldig til: {{ current_user.subscription_end.strftime('%d.%m.%Y') }}</p>
             {% endif %}
         </div>
-    {% elif current_user.is_authenticated %}
-        <div class="card mb-5">
+    {% elif is_expired %}
+        <div class="alert alert-warning text-center mb-5">
+            <h4 class="alert-heading">Din prøveperiode er utløpt</h4>
+            <p>Velg et abonnement under for å fortsette å bruke alle Aksjeradar's funksjoner.</p>
+        </div>
+    {% elif show_trial and current_user.is_authenticated %}
+        <div class="card mb-5 border-primary">
             <div class="card-body text-center">
-                <h4 class="card-title">Prøv Aksjeradar gratis</h4>
-                <p class="card-text">Start en 10-minutters gratis prøveperiode for å teste alle premium-funksjoner.</p>
+                <h4 class="card-title">Prøv Aksjeradar gratis i 14 dager</h4>
+                <p class="card-text">Få tilgang til alle premium-funksjoner i to uker, helt gratis!</p>
+                <ul class="list-unstyled text-start mb-4">
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Full tilgang til alle analyser</li>
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Porteføljeovervåking</li>
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Sanntidsvarsler</li>
+                    <li><i class="bi bi-check-circle-fill text-success me-2"></i>Avanserte analyseverktøy</li>
+                </ul>
                 <form action="{{ url_for('main.start_trial') }}" method="post">
                     <button type="submit" class="btn btn-primary btn-lg">Start gratis prøveperiode</button>
                 </form>
             </div>
         </div>
-    {% else %}
+    {% elif not current_user.is_authenticated %}
         <div class="alert alert-info text-center mb-5">
             <h4 class="alert-heading">Logg inn for å starte</h4>
             <p>Du må <a href="{{ url_for('main.login') }}">logge inn</a> eller <a href="{{ url_for('main.register') }}">registrere deg</a> for å starte en gratis prøveperiode eller kjøpe et abonnement.</p>
