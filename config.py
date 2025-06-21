@@ -78,10 +78,10 @@ class Config:
             missing = []
             if not STRIPE_PUBLISHABLE_KEY: missing.append('STRIPE_PUBLISHABLE_KEY')
             if not STRIPE_SECRET_KEY: missing.append('STRIPE_SECRET_KEY')
-            if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')
-            if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
+            if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')            if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
-            if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
+            if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
+            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
 
     # Use dummy values for non-Railway environments
     if not IS_REAL_PRODUCTION:
