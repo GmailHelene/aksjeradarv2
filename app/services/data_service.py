@@ -327,7 +327,19 @@ class DataService:
                 
         except Exception as e:
             logger.error(f"Error fetching crypto data: {str(e)}")
-            return dict(list(DataService.FALLBACK_CRYPTO.items())[:limit])
+            return dict(list(DataService.FALLBACK_CRYPTO.items())[:limit])    # Fallback currency rates (dummy data)
+    FALLBACK_CURRENCY_RATES = {
+        'EUR': {'rate': 0.92, 'change': 0.5},
+        'GBP': {'rate': 0.79, 'change': -0.3},
+        'JPY': {'rate': 142.50, 'change': 0.2},
+        'NOK': {'rate': 10.75, 'change': -0.1},
+        'SEK': {'rate': 10.85, 'change': 0.4},
+        'DKK': {'rate': 6.85, 'change': 0.3},
+        'CHF': {'rate': 0.89, 'change': -0.2},
+        'AUD': {'rate': 1.48, 'change': 0.6},
+        'CAD': {'rate': 1.32, 'change': -0.4},
+        'NZD': {'rate': 1.62, 'change': 0.1}
+    }
 
     @staticmethod
     @cache_result(cache_time=300)  # Cache for 5 minutes
@@ -336,6 +348,8 @@ class DataService:
         try:
             result = {}
             currencies = ['EUR', 'GBP', 'JPY', 'NOK', 'SEK', 'DKK', 'CHF', 'AUD', 'CAD', 'NZD']
+            cr = CurrencyRates()
+            success = False
             
             for currency in currencies:
                 if currency != base:
@@ -348,30 +362,49 @@ class DataService:
                             'name': f"{currency}/{base}",
                             'last_price': rate,
                             'change_percent': (change / rate) * 100,
-                            'volume': 1000000,  # Dummy volume
-                            'currency': base,
+                            'is_fallback': False
                         }
-                        
-                        if result[currency]['change_percent'] > 0.5:
-                            result[currency]['signal'] = 'BUY'
-                        elif result[currency]['change_percent'] < -0.5:
-                            result[currency]['signal'] = 'SELL'
-                        else:
-                            result[currency]['signal'] = 'HOLD'
-                            
+                        success = True
                     except Exception as e:
                         logger.error(f"Error fetching rate for {currency}: {str(e)}")
-                        result[currency] = DataService.FALLBACK_CURRENCY.get(currency, {
+                        fallback = DataService.FALLBACK_CURRENCY_RATES.get(currency, {'rate': 1.0, 'change': 0.0})
+                        result[currency] = {
                             'name': f"{currency}/{base}",
-                            'last_price': 0,
-                            'change_percent': 0,
-                            'volume': 0,
-                            'currency': base,
-                            'signal': 'N/A'
-                        })
+                            'last_price': fallback['rate'],
+                            'change_percent': fallback['change'],
+                            'is_fallback': True
+                        }            for currency, data in result.items():
+                # Add signal based on change percent
+                if data['change_percent'] > 0.5:
+                    result[currency]['signal'] = 'BUY'
+                elif data['change_percent'] < -0.5:
+                    result[currency]['signal'] = 'SELL'
+                else:
+                    result[currency]['signal'] = 'HOLD'
+                
+                # Add dummy volume since forex data doesn't include volume
+                result[currency]['volume'] = 1000000 if not data.get('is_fallback') else 500000
+                result[currency]['currency'] = base
             
-            if not result:
-                logger.warning("No currency data available, using fallback data")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error in currency overview: {str(e)}")
+            # Return all fallback data
+            result = {}
+            for currency in currencies:
+                if currency != base:
+                    fallback = DataService.FALLBACK_CURRENCY_RATES.get(currency, {'rate': 1.0, 'change': 0.0})
+                    result[currency] = {
+                        'name': f"{currency}/{base}",
+                        'last_price': fallback['rate'],
+                        'change_percent': fallback['change'],
+                        'volume': 500000,  # Reduced volume to indicate fallback data
+                        'currency': base,
+                        'signal': 'HOLD' if -0.5 <= fallback['change'] <= 0.5 else ('BUY' if fallback['change'] > 0.5 else 'SELL'),
+                        'is_fallback': True
+                    }
+            return result
                 return DataService.FALLBACK_CURRENCY
                 
             return result
