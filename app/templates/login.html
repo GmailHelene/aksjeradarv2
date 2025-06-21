@@ -9,17 +9,31 @@
                     <h2 class="h4 mb-0">Logg inn</h2>
                 </div>
                 <div class="card-body">                    <form method="post" novalidate>
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        {{ form.csrf_token }}
                         <div class="mb-3">
-                            <label for="username" class="form-label">Brukernavn</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Passord</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Logg inn</button>
+                            {{ form.submit(class="btn btn-primary") }}
                             <a href="{{ url_for('main.register') }}" class="btn btn-outline-secondary">Registrer ny bruker</a>
                         </div>
                     </form>

@@ -10,21 +10,16 @@ stripe_routes = Blueprint('stripe', __name__)
 @stripe_routes.record_once
 def on_register(state):
     try:
-        # Check if we're in development mode
-        is_dev = state.app.config.get('FLASK_ENV') != 'production'
-        
         # Set Stripe API key
         stripe.api_key = state.app.config['STRIPE_SECRET_KEY']
         
-        # Only test the connection in production
-        if not is_dev:
-            # Test the connection by making a simple API call
-            stripe.Price.list(limit=1)
-            state.app.logger.info('Stripe initialized successfully')
-        else:
-            state.app.logger.info('Stripe initialized in development mode (no API calls)')
+        # Test the connection by making a simple API call
+        stripe.Price.list(limit=1)
+        state.app.logger.info('Stripe initialized successfully')
     except Exception as e:
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
+        # In production, we want to fail fast if Stripe isn't configured properly
+        raise
 
 @stripe_routes.route('/create-checkout-session', methods=['POST'])
 @login_required

@@ -3,31 +3,32 @@ load_dotenv()  # Legg til dette kallet for å laste miljøvariabler
 import os
 from datetime import timedelta
 
-class Config:    # Security settings
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    if not SECRET_KEY:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('SECRET_KEY must be set in production environment')
-        else:
-            SECRET_KEY = 'dev-dette-er-en-hemmelighet-ikke-bruk-i-produksjon'
-            print('Warning: Using development SECRET_KEY')
-      # Database settings
+class Config:    
+    # Environment detection
+    FLASK_ENV = os.environ.get('FLASK_ENV', 'development')  # Default to development for local setup
+    IS_PRODUCTION = FLASK_ENV == 'production'
+    
+    # Security settings
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-replace-in-production')
+    
+    # CSRF settings
+    WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour
+    WTF_CSRF_SSL_STRICT = IS_PRODUCTION  # SSL in production only
+    WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY', SECRET_KEY)
+    
+    # Database settings
     DATABASE_URL = os.environ.get('DATABASE_URL')
     if not DATABASE_URL:
-        if os.environ.get('FLASK_ENV') == 'production':
+        if IS_PRODUCTION:
             raise ValueError('DATABASE_URL must be set in production environment')
         else:
-            # Make sure we use the full path for SQLite
             base_dir = os.path.abspath(os.path.dirname(__file__))
-            instance_dir = os.path.join(base_dir, 'instance')
-            if not os.path.exists(instance_dir):
-                os.makedirs(instance_dir)
-            
-            DATABASE_URL = f'sqlite:///{os.path.join(instance_dir, "aksjeradar.db")}'
-            print(f'Warning: Using SQLite database at {DATABASE_URL} for development')
+            DATABASE_URL = f'sqlite:///{os.path.join(base_dir, "instance", "aksjeradar.db")}'
+            os.makedirs(os.path.join(base_dir, "instance"), exist_ok=True)
     
     # Fix potential Railway.app PostgreSQL URL format
-    if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    if DATABASE_URL.startswith('postgres://'):
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
@@ -61,37 +62,26 @@ class Config:    # Security settings
     # Ensure export folder exists
     os.makedirs(EXPORT_FOLDER, exist_ok=True)    # Stripe settings
     STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
-    if not STRIPE_PUBLISHABLE_KEY:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_PUBLISHABLE_KEY must be set in production environment')
-        else:
-            STRIPE_PUBLISHABLE_KEY = 'pk_test_dummy_key_for_development'
-            print('Warning: Using dummy Stripe publishable key for development')
-    
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-    if not STRIPE_SECRET_KEY:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_SECRET_KEY must be set in production environment')
-        else:
-            STRIPE_SECRET_KEY = 'sk_test_dummy_key_for_development'
-            print('Warning: Using dummy Stripe secret key for development')
-    
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
-    if not STRIPE_WEBHOOK_SECRET:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_WEBHOOK_SECRET must be set in production environment')
-        else:
-            STRIPE_WEBHOOK_SECRET = 'whsec_dummy_webhook_secret_for_development'
-            print('Warning: Using dummy Stripe webhook secret for development')
-
+    
     # Stripe Product IDs
     STRIPE_MONTHLY_PRICE_ID = os.environ.get('STRIPE_MONTHLY_PRICE_ID')
-    if not STRIPE_MONTHLY_PRICE_ID:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_MONTHLY_PRICE_ID must be set in production environment')
-        else:
-            STRIPE_MONTHLY_PRICE_ID = 'price_dummy_monthly'
-            print('Warning: Using dummy Stripe monthly price ID for development')
+    STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
+    STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
+    
+    # In production, require all Stripe settings
+    if IS_PRODUCTION:
+        if not all([STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+                   STRIPE_MONTHLY_PRICE_ID, STRIPE_YEARLY_PRICE_ID, STRIPE_LIFETIME_PRICE_ID]):
+            missing = []
+            if not STRIPE_PUBLISHABLE_KEY: missing.append('STRIPE_PUBLISHABLE_KEY')
+            if not STRIPE_SECRET_KEY: missing.append('STRIPE_SECRET_KEY')
+            if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')
+            if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
+            if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
+            if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
+            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
     
     STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
     if not STRIPE_YEARLY_PRICE_ID:

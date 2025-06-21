@@ -5,12 +5,19 @@ from ..models.user import User
 from ..extensions import db
 from ..utils.subscription import subscription_required
 from ..utils.trial import trial_required
+from ..forms import LoginForm, RegistrationForm  # Import the forms
+from urllib.parse import urlparse, urljoin
 from datetime import datetime, timedelta
 import time
 import os
 import stripe
 
 main = Blueprint('main', __name__)
+
+def url_is_safe(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 def init_stripe():
     """Initialize Stripe with error handling"""
@@ -30,17 +37,12 @@ def init_stripe():
 @main.record_once
 def on_register(state):
     try:
-        # Check if we're in development mode
-        is_dev = state.app.config.get('FLASK_ENV') != 'production'
-        
         # Set Stripe API key
         stripe.api_key = state.app.config['STRIPE_SECRET_KEY']
         
-        # Only test the connection in production
-        if not is_dev:
-            # Test the connection by making a simple API call
-            stripe.Price.list(limit=1)
-            state.app.logger.info('Stripe initialized successfully')
+        # Test the connection by making a simple API call
+        stripe.Price.list(limit=1)
+        state.app.logger.info('Stripe initialized successfully')
         else:
             state.app.logger.info('Stripe initialized in development mode (no API calls)')
     except Exception as e:
@@ -85,17 +87,19 @@ def search():
 
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and user.check_password(form.password.data):
             login_user(user)
             flash('Du er nå logget inn!', 'success')
+            next_page = request.args.get('next')
+            if next_page and url_is_safe(next_page):
+                return redirect(next_page)
             return redirect(url_for('main.index'))
         else:
             flash('Ugyldig brukernavn eller passord', 'danger')
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @main.route('/logout')
 @login_required
@@ -110,38 +114,18 @@ def unauthorized_handler():
 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        # Log registration attempt with form data
-        current_app.logger.info(f'Registration attempt with data: {request.form}')
-        
-        username = request.form.get('username')
-        password = request.form.get('password')
-        email = request.form.get('email')
-        
-        # Log extracted data
-        current_app.logger.info(f'Extracted data: username={username}, email={email}, password_length={len(password) if password else 0}')
-        
-        # Validate input
-        if not username or not password:
-            flash('Brukernavn og passord er påkrevd', 'danger')
-            return redirect(url_for('main.register'))
-        
-        # Allow email to be optional for backward compatibility
-        
-        # Check if username already exists
-        if User.query.filter_by(username=username).first():
-            flash('Brukernavnet er allerede i bruk', 'danger')
-            return redirect(url_for('main.register'))
-        
-        # Check if email already exists (if provided)
-        if email and User.query.filter_by(email=email).first():
-            flash('E-postadressen er allerede i bruk', 'danger')
-            return redirect(url_for('main.register'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        # Log registration attempt
+        current_app.logger.info(f'Registration attempt for username: {form.username.data}')
         
         try:
             # Create user
-            user = User(username=username, email=email or f"{username}@example.com")
-            user.set_password(password)
+            user = User(
+                username=form.username.data,
+                email=form.email.data
+            )
+            user.set_password(form.password.data)
             
             # Start free trial
             user.start_free_trial()
