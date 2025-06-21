@@ -99,6 +99,10 @@ def logout():
     flash('Du er nå logget ut', 'success') 
     return redirect(url_for('main.index'))
 
+def unauthorized_handler():
+    flash('Du må logge inn for å få tilgang til denne siden.', 'warning')
+    return redirect(url_for('main.login', next=request.url))
+
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -565,7 +569,7 @@ def trial_expired():
 
 @main.route('/contact')
 def contact():
-    """Display contact page"""
+    """Show contact page"""
     return render_template('contact.html')
 
 @main.route('/contact/submit', methods=['POST'])

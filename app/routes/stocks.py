@@ -14,34 +14,22 @@ stocks = Blueprint('stocks', __name__)
 def index():
     """Show a list of popular stocks"""
     try:
-        # Get most active stocks with limits for a quick overview
-        oslo_stocks = DataService.get_oslo_bors_overview(limit=5)
-        global_stocks = DataService.get_global_stocks_overview(limit=5)
-        crypto_data = DataService.get_crypto_overview(limit=5)
-        currency_data = DataService.get_currency_overview()
+        oslo_stocks = DataService.get_oslo_bors_overview(limit=10)
+        global_stocks = DataService.get_global_stocks_overview(limit=10)
         
-        # Mix all stock types into a single dict for the template
-        all_stocks = {}
-        all_stocks.update(oslo_stocks)
-        all_stocks.update(global_stocks)
-        all_stocks.update(crypto_data)
-        all_stocks.update(currency_data)
-        
+        if not oslo_stocks and not global_stocks:
+            flash("Kunne ikke hente markedsdata. Vennligst prøv igjen senere.", "error")
+            
         return render_template(
             'stocks/list.html',
-            stocks=all_stocks,
-            market_types={
-                'oslo': list(oslo_stocks.keys()),
-                'global': list(global_stocks.keys()),
-                'crypto': list(crypto_data.keys()),
-                'currency': list(currency_data.keys())
-            },
-            title="Markedsoversikt"
+            oslo_stocks=oslo_stocks if oslo_stocks else [],
+            global_stocks=global_stocks if global_stocks else [],
+            title="Populære aksjer"
         )
     except Exception as e:
         current_app.logger.error(f"Error in stocks index: {str(e)}")
-        flash("En feil oppstod ved henting av markedsdata. Vennligst prøv igjen senere.", "error")
-        return render_template('stocks/list.html', title="Markedsoversikt")
+        flash("En feil oppstod ved henting av aksjedata. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/list.html', title="Populære aksjer")
 
 @stocks.route('/details/<ticker>')
 @trial_required
@@ -80,19 +68,23 @@ def search():
 @stocks.route('/list/oslo')
 @trial_required
 def oslo_list():
-    """List all Oslo Børs stocks"""
+    """Show Oslo Børs stocks"""
     try:
         stocks = DataService.get_oslo_bors_overview()
+        if not stocks:
+            flash("Kunne ikke hente Oslo Børs data. Vennligst prøv igjen senere.", "error")
+            stocks = []
+            
         return render_template(
             'stocks/list.html',
             stocks=stocks,
-            market_type="oslo",
-            title="Oslo Børs"
+            title="Oslo Børs",
+            market_type="oslo"
         )
     except Exception as e:
-        current_app.logger.error(f"Error in Oslo Børs list: {str(e)}")
-        flash("Kunne ikke hente Oslo Børs data. Vennligst prøv igjen senere.", "error")
-        return render_template('stocks/list.html', stocks={}, title="Oslo Børs", market_type="oslo")
+        current_app.logger.error(f"Error in oslo_list: {str(e)}")
+        flash("En feil oppstod ved henting av Oslo Børs data. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/list.html', title="Oslo Børs", market_type="oslo")
 
 @stocks.route('/list/global')
 @trial_required

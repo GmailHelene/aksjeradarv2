@@ -472,3 +472,70 @@ class DataService:
             logger.error(f"Error searching crypto: {str(e)}")
         
         return results
+
+    @staticmethod
+    @cache_result(cache_time=600)  # Cache for 10 minutes
+    def get_stock_data(ticker):
+        """Get stock data with enhanced error handling"""
+        try:
+            ticker_obj = yf.Ticker(ticker)
+            info = ticker_obj.info
+            history = ticker_obj.history(period="1d")
+            
+            if history.empty:
+                logger.warning(f"No history data available for {ticker}")
+                return None
+                
+            last_price = history['Close'].iloc[-1] if not history.empty else None
+            prev_close = info.get('previousClose', None)
+            
+            if not last_price or not prev_close:
+                logger.warning(f"Missing price data for {ticker}")
+                return None
+                
+            change = last_price - prev_close
+            change_percent = (change / prev_close) * 100 if prev_close else 0
+            
+            return {
+                'symbol': ticker,
+                'name': info.get('longName', info.get('shortName', ticker)),
+                'last_price': last_price,
+                'change': change,
+                'change_percent': change_percent,
+                'volume': info.get('volume', 0),
+                'market_cap': info.get('marketCap', 0),
+                'currency': info.get('currency', 'NOK' if ticker.endswith('.OL') else 'USD'),
+                'signal': DataService.calculate_signal(ticker_obj)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error fetching data for {ticker}: {str(e)}")
+            return None
+            
+    @staticmethod
+    def calculate_signal(ticker_obj):
+        """Calculate trading signal based on technical indicators"""
+        try:
+            history = ticker_obj.history(period="60d")
+            if history.empty:
+                return "N/A"
+                
+            # Calculate moving averages
+            ma20 = history['Close'].rolling(window=20).mean()
+            ma50 = history['Close'].rolling(window=50).mean()
+            
+            last_price = history['Close'].iloc[-1]
+            last_ma20 = ma20.iloc[-1]
+            last_ma50 = ma50.iloc[-1]
+            
+            # Simple signal logic
+            if last_price > last_ma20 and last_ma20 > last_ma50:
+                return "KJØP"
+            elif last_price < last_ma20 and last_ma20 < last_ma50:
+                return "SELG"
+            else:
+                return "HOLD"
+                
+        except Exception as e:
+            logger.error(f"Error calculating signal: {str(e)}")
+            return "N/A"

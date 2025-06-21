@@ -1,0 +1,85 @@
+/* Table styling fixes */
+.table {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    margin-bottom: 0;
+}
+
+.table-responsive {
+    background-color: #ffffff !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.075) !important;
+    color: #212529 !important;
+}
+
+.table thead th {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td, .table th {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Card text contrast fixes */
+.card-header.bg-white {
+    color: #212529 !important;
+}
+
+.card-header.bg-dark, 
+.card-header.bg-black,
+.card-header.bg-primary {
+    color: #ffffff !important;
+}
+
+.card-body.bg-dark {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Fix subscription page */
+.pricing-card {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+.pricing-card .card-header {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Fix dark backgrounds with light text */
+.bg-dark, .bg-black, .bg-primary {
+    color: #ffffff !important;
+}
+
+.bg-light, .bg-white {
+    color: #212529 !important;
+}
+
+/* Market data tables */
+.market-table {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+.market-table thead th {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+/* Stock list tables */
+.stock-list-table {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Portfolio tables */
+.portfolio-table {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}

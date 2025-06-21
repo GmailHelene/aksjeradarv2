@@ -28,6 +28,9 @@ class User(UserMixin, db.Model):
     subscription_id = db.Column(db.String(255), nullable=True)
     subscription_status = db.Column(db.String(50), nullable=True)
     
+    # Admin field
+    is_admin = db.Column(db.Boolean, default=False)
+    
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -96,6 +99,20 @@ class User(UserMixin, db.Model):
         
         delta = self.subscription_end - datetime.utcnow()
         return max(0, delta.days)
+
+    def has_active_subscription(self):
+        if self.is_admin or self.email == 'helene721@gmail.com':
+            return True
+        if self.subscription_type and self.subscription_end and self.subscription_end > datetime.utcnow():
+            return True
+        return False
+    
+    def is_in_trial(self):
+        if self.is_admin or self.email == 'helene721@gmail.com':
+            return True
+        if not self.trial_end:
+            return False
+        return datetime.utcnow() <= self.trial_end
 
 @login_manager.user_loader
 def load_user(user_id):

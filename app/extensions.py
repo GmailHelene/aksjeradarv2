@@ -11,6 +11,8 @@ csrf = CSRFProtect()  # Initialize CSRF protection
 
 login_manager.login_view = 'main.login'
 login_manager.session_protection = "strong"  # Enhanced session protection
+login_manager.login_message = 'Du må logge inn for å få tilgang til denne siden.'
+login_manager.login_message_category = 'warning'
 
 @login_manager.user_loader
 def load_user(user_id):
