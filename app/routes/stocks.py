@@ -123,19 +123,18 @@ def crypto_list():
 @stocks.route('/list/currency')
 @trial_required
 def currency_list():
-    """List currency pairs"""
-    try:
-        stocks = DataService.get_currency_overview()
+    """List currency pairs"""    try:
+        currencies = DataService.get_currency_overview()
         return render_template(
             'stocks/currency.html',
-            stocks=stocks,
+            currencies=currencies,
             market_type="currency",
             title="Valutakurser"
         )
     except Exception as e:
         current_app.logger.error(f"Error in currency list: {str(e)}")
         flash("Kunne ikke hente valutadata. Vennligst prøv igjen senere.", "error")
-        return render_template('stocks/currency.html', stocks={}, title="Valutakurser", market_type="currency")
+        return render_template('stocks/currency.html', currencies={}, title="Valutakurser", market_type="currency")
 
 @stocks.route('/api/stock/<ticker>')
 def api_stock_data(ticker):

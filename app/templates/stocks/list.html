@@ -46,7 +46,6 @@
                     </thead>
                     <tbody>
                         {% for ticker, stock in stocks.items() %}
-                            {% if (market_type is not defined) or (market_types is defined and ticker in market_types[market_type]) %}
                             <tr>
                                 <td><strong>{{ ticker }}</strong></td>
                                 <td>
