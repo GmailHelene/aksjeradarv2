@@ -66,19 +66,20 @@ class Config:
     STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
-    
-    # Stripe Product IDs
+      # Stripe Product IDs
     STRIPE_MONTHLY_PRICE_ID = os.environ.get('STRIPE_MONTHLY_PRICE_ID')
     STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
     STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
-      # Only require Stripe settings in actual production (Railway)
+    
+    # Only require Stripe settings in actual production (Railway)
     if IS_REAL_PRODUCTION:
         if not all([STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
                    STRIPE_MONTHLY_PRICE_ID, STRIPE_YEARLY_PRICE_ID, STRIPE_LIFETIME_PRICE_ID]):
             missing = []
             if not STRIPE_PUBLISHABLE_KEY: missing.append('STRIPE_PUBLISHABLE_KEY')
             if not STRIPE_SECRET_KEY: missing.append('STRIPE_SECRET_KEY')
-            if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')            if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
+            if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')
+            if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
             if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
             raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
