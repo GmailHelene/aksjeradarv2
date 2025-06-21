@@ -43,10 +43,11 @@ def on_register(state):
         # Test the connection by making a simple API call
         stripe.Price.list(limit=1)
         state.app.logger.info('Stripe initialized successfully')
-        else:
-            state.app.logger.info('Stripe initialized in development mode (no API calls)')
     except Exception as e:
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
+        if state.app.config.get('FLASK_ENV') == 'production':
+            # In production, we want to fail fast if Stripe isn't configured
+            raise
 
 @main.route('/')
 def index():
