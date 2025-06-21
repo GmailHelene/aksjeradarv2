@@ -8,8 +8,8 @@
                 <div class="card-header bg-primary text-white">
                     <h2 class="mb-0">Registrer deg</h2>
                 </div>
-                <div class="card-body">
-                    <form method="post" novalidate>
+                <div class="card-body">                    <form method="post" novalidate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="username" class="form-label">Brukernavn</label>
                             <input type="text" class="form-control" id="username" name="username" required>

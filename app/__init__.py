@@ -20,7 +20,10 @@ def create_app():
             SQLALCHEMY_TRACK_MODIFICATIONS=False,
             STRIPE_SECRET_KEY=os.environ.get('STRIPE_SECRET_KEY'),
             EXPORT_FOLDER=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/exports'),
-            WTF_CSRF_TIME_LIMIT=3600  # CSRF token validity period in seconds
+            WTF_CSRF_TIME_LIMIT=3600,  # CSRF token validity period in seconds
+            WTF_CSRF_SECRET_KEY=os.environ.get('WTF_CSRF_SECRET_KEY', 'csrf-key-for-forms'),
+            WTF_CSRF_ENABLED=True,
+            WTF_CSRF_SSL_STRICT=False  # For development
         )
     
     # Set up logging
