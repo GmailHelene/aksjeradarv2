@@ -4,12 +4,14 @@ import multiprocessing
 # Server socket
 bind = "0.0.0.0:" + os.environ.get("PORT", "8080")
 
-# Worker processes - fixed number for Railway
-workers = 4  # Fixed number of workers for Railway's resource limits
+# Worker processes - optimized for Railway
+workers = 2  # Reduced for Railway's memory limits
 worker_class = 'sync'
 worker_connections = 1000
-timeout = 120  # 2 minutes timeout
-keepalive = 2
+timeout = 30  # Reduced timeout for better resource management
+keepalive = 5  # Increased keepalive for better connection reuse
+max_requests = 1000  # Restart workers after this many requests
+max_requests_jitter = 50  # Add randomness to max_requests
 
 # Logging
 errorlog = '-'
