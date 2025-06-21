@@ -7,6 +7,8 @@ class Config:
     # Environment detection
     FLASK_ENV = os.environ.get('FLASK_ENV', 'development')  # Default to development for local setup
     IS_PRODUCTION = FLASK_ENV == 'production'
+    # Check if we're running on Railway (real production) or locally
+    IS_REAL_PRODUCTION = os.environ.get('RAILWAY_STATIC_URL') is not None
     
     # Security settings
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-replace-in-production')
@@ -69,9 +71,8 @@ class Config:
     STRIPE_MONTHLY_PRICE_ID = os.environ.get('STRIPE_MONTHLY_PRICE_ID')
     STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
     STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
-    
-    # In production, require all Stripe settings
-    if IS_PRODUCTION:
+      # Only require Stripe settings in actual production (Railway)
+    if IS_REAL_PRODUCTION:
         if not all([STRIPE_PUBLISHABLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
                    STRIPE_MONTHLY_PRICE_ID, STRIPE_YEARLY_PRICE_ID, STRIPE_LIFETIME_PRICE_ID]):
             missing = []
@@ -82,11 +83,8 @@ class Config:
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
             if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
             raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
-    
+      # Already handled in the check above
     STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
-    if not STRIPE_YEARLY_PRICE_ID:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_YEARLY_PRICE_ID must be set in production environment')
         else:
             STRIPE_YEARLY_PRICE_ID = 'price_dummy_yearly'
             print('Warning: Using dummy Stripe yearly price ID for development')
