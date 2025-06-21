@@ -8,8 +8,21 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#000000",
+  "background_color": "#ffffff",
   "theme_color": "#000000",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Se Oslo Børs",
+      "url": "/stocks/list/oslo",
+      "description": "Se aksjer på Oslo Børs"
+    },
+    {
+      "name": "Min Portefølje",
+      "url": "/portfolio",
+      "description": "Se din portefølje"
+    }
+  ],
   "icons": [
     {
       "src": "/static/icons/icon-72x72.png",

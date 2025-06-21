@@ -629,3 +629,8 @@ def get_currency():
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@main.route('/offline')
+def offline():
+    """Show offline page"""
+    return render_template('offline.html')

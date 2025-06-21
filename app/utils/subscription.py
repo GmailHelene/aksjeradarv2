@@ -30,7 +30,11 @@ def subscription_required(f):
             session['next'] = request.url
             flash('Logg inn for å få tilgang til denne funksjonen.', 'info')
             return redirect(url_for('main.login'))
-        
+            
+        # Always grant access for admin users or specific email
+        if current_user.is_admin or current_user.email == 'helene721@gmail.com':
+            return f(*args, **kwargs)
+            
         # Check if user has an active subscription or is in trial
         if current_user.has_active_subscription():
             return f(*args, **kwargs)

@@ -316,6 +316,13 @@
         </div>
     </div>
     
+    <!-- PWA Install Button -->
+    <div id="pwaInstall" class="position-fixed bottom-0 end-0 m-3" style="display: none; z-index: 1050;">
+        <button id="pwaInstallButton" class="btn btn-primary rounded-pill shadow-lg">
+            <i class="bi bi-download me-2"></i>Installer app
+        </button>
+    </div>
+    
     <!-- Scripts -->    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/js/main.js?v={{ '%-d%H%M%S'|now }}"></script>
     <script src="/static/js/cache-buster.js?v={{ '%-d%H%M%S'|now }}"></script>
@@ -344,6 +351,31 @@
             document.querySelectorAll('.navbar.bg-dark .container, footer.bg-dark .container').forEach(function(container) {
                 container.classList.add('bg-dark');
             });
+        });
+        
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwaInstall').style.display = 'block';
+        });
+        
+        document.getElementById('pwaInstallButton')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    document.getElementById('pwaInstall').style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('pwaInstall').style.display = 'none';
+            console.log('PWA was installed');
         });
     </script>    {% block scripts %}{% endblock %}
     <script src="/static/js/cookie-consent.js?v={{ '%-d%H%M%S'|now }}"></script>
