@@ -82,10 +82,20 @@ class Config:
             if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
             if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
-            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
-
-    # Use dummy values for non-Railway environments
+            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')    # Use dummy values for non-Railway environments
     if not IS_REAL_PRODUCTION:
+        if not STRIPE_PUBLISHABLE_KEY:
+            STRIPE_PUBLISHABLE_KEY = 'pk_test_dummy'
+            print('Warning: Using dummy Stripe publishable key for development')
+        if not STRIPE_SECRET_KEY:
+            STRIPE_SECRET_KEY = 'sk_test_dummy'
+            print('Warning: Using dummy Stripe secret key for development')
+        if not STRIPE_WEBHOOK_SECRET:
+            STRIPE_WEBHOOK_SECRET = 'whsec_dummy'
+            print('Warning: Using dummy Stripe webhook secret for development')
+        if not STRIPE_MONTHLY_PRICE_ID:
+            STRIPE_MONTHLY_PRICE_ID = 'price_dummy_monthly'
+            print('Warning: Using dummy Stripe monthly price ID for development')
         if not STRIPE_YEARLY_PRICE_ID:
             STRIPE_YEARLY_PRICE_ID = 'price_dummy_yearly'
             print('Warning: Using dummy Stripe yearly price ID for development')
