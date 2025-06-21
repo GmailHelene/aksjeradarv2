@@ -81,18 +81,13 @@ class Config:
             if not STRIPE_WEBHOOK_SECRET: missing.append('STRIPE_WEBHOOK_SECRET')
             if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
-            if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
-            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')    # Already handled in the check above for real production
-    STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
-    STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
-        else:
+            if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
+
+    # Use dummy values for non-Railway environments
+    if not IS_REAL_PRODUCTION:
+        if not STRIPE_YEARLY_PRICE_ID:
             STRIPE_YEARLY_PRICE_ID = 'price_dummy_yearly'
             print('Warning: Using dummy Stripe yearly price ID for development')
-    
-    STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
-    if not STRIPE_LIFETIME_PRICE_ID:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise ValueError('STRIPE_LIFETIME_PRICE_ID must be set in production environment')
-        else:
+        if not STRIPE_LIFETIME_PRICE_ID:
             STRIPE_LIFETIME_PRICE_ID = 'price_dummy_lifetime'
             print('Warning: Using dummy Stripe lifetime price ID for development')
