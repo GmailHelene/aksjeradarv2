@@ -82,9 +82,9 @@ class Config:
             if not STRIPE_MONTHLY_PRICE_ID: missing.append('STRIPE_MONTHLY_PRICE_ID')
             if not STRIPE_YEARLY_PRICE_ID: missing.append('STRIPE_YEARLY_PRICE_ID')
             if not STRIPE_LIFETIME_PRICE_ID: missing.append('STRIPE_LIFETIME_PRICE_ID')
-            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')
-      # Already handled in the check above
+            raise ValueError(f'Missing required Stripe settings in production: {", ".join(missing)}')    # Already handled in the check above for real production
     STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID')
+    STRIPE_LIFETIME_PRICE_ID = os.environ.get('STRIPE_LIFETIME_PRICE_ID')
         else:
             STRIPE_YEARLY_PRICE_ID = 'price_dummy_yearly'
             print('Warning: Using dummy Stripe yearly price ID for development')
