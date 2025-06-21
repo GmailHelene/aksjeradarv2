@@ -13,13 +13,18 @@ def on_register(state):
         # Set Stripe API key
         stripe.api_key = state.app.config['STRIPE_SECRET_KEY']
         
-        # Test the connection by making a simple API call
-        stripe.Price.list(limit=1)
-        state.app.logger.info('Stripe initialized successfully')
+        # Only test the connection in production
+        if state.app.config['IS_REAL_PRODUCTION']:
+            # Test the connection by making a simple API call
+            stripe.Price.list(limit=1)
+            state.app.logger.info('Stripe initialized successfully')
+        else:
+            state.app.logger.info('Stripe initialized with dummy keys for development')
     except Exception as e:
         state.app.logger.error(f'Failed to initialize Stripe during blueprint registration: {str(e)}')
-        # In production, we want to fail fast if Stripe isn't configured properly
-        raise
+        # Only raise in production
+        if state.app.config['IS_REAL_PRODUCTION']:
+            raise
 
 @stripe_routes.route('/create-checkout-session', methods=['POST'])
 @login_required
