@@ -1,11 +1,11 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+import math
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from ..services.data_service import DataService
 from ..services.analysis_service import AnalysisService
 from flask_login import current_user
 from ..utils.subscription import subscription_required
 from ..utils.trial import trial_required
 from datetime import datetime, timedelta
-import math
 
 stocks = Blueprint('stocks', __name__)
 
@@ -13,189 +13,177 @@ stocks = Blueprint('stocks', __name__)
 @trial_required
 def index():
     """Show a list of popular stocks"""
-    # Get most active stocks
-    oslo_stocks = DataService.get_oslo_bors_overview(limit=20)  # Increased limit
-    global_stocks = DataService.get_global_stocks_overview(limit=20)  # Increased limit
-    crypto_data = DataService.get_crypto_list(per_page=10)  # Using the correct method
-    currency_data = DataService.get_currency_list()[:10]  # Using the correct method
-    
-    return render_template(
-        'stocks/index.html',
-        oslo_stocks=oslo_stocks,
-        global_stocks=global_stocks,
-        crypto_data=crypto_data,
-        currency_data=currency_data
-    )
+    try:
+        # Get most active stocks with limits for a quick overview
+        oslo_stocks = DataService.get_oslo_bors_overview(limit=5)
+        global_stocks = DataService.get_global_stocks_overview(limit=5)
+        crypto_data = DataService.get_crypto_overview(limit=5)
+        currency_data = DataService.get_currency_overview()
+        
+        # Mix all stock types into a single dict for the template
+        all_stocks = {}
+        all_stocks.update(oslo_stocks)
+        all_stocks.update(global_stocks)
+        all_stocks.update(crypto_data)
+        all_stocks.update(currency_data)
+        
+        return render_template(
+            'stocks/list.html',
+            stocks=all_stocks,
+            market_types={
+                'oslo': list(oslo_stocks.keys()),
+                'global': list(global_stocks.keys()),
+                'crypto': list(crypto_data.keys()),
+                'currency': list(currency_data.keys())
+            },
+            title="Markedsoversikt"
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in stocks index: {str(e)}")
+        flash("En feil oppstod ved henting av markedsdata. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/list.html', title="Markedsoversikt")
 
 @stocks.route('/details/<ticker>')
 @trial_required
 def details(ticker):
     """Show details for a specific stock"""
     try:
-        # Get stock data
         stock_info = DataService.get_stock_info(ticker)
-        stock_data = DataService.get_stock_data(ticker)
-        technical_analysis = AnalysisService.get_technical_analysis(ticker)
-        
-        # Get historical data for chart
-        historical_data = DataService.get_stock_data(ticker, period='1y')
-        
-        # Format data for chart
-        chart_data = []
-        if not historical_data.empty:
-            for date, row in historical_data.iterrows():
-                chart_data.append({
-                    'date': date.strftime('%Y-%m-%d'),
-                    'open': round(row['Open'], 2),
-                    'high': round(row['High'], 2),
-                    'low': round(row['Low'], 2),
-                    'close': round(row['Close'], 2),
-                    'volume': int(row['Volume'])
-                })
+        stock_data = DataService.get_stock_data(ticker, period='1mo', interval='1d')
         
         return render_template(
             'stocks/details.html',
             ticker=ticker,
-            stock_info=stock_info,
-            stock_data=stock_data,
-            technical_analysis=technical_analysis,
-            chart_data=chart_data
+            stock=stock_info,
+            historical_data=stock_data
         )
     except Exception as e:
-        flash(f"Error fetching data for {ticker}: {str(e)}", "danger")
+        current_app.logger.error(f"Error in stock details for {ticker}: {str(e)}")
+        flash(f"Kunne ikke hente data for {ticker}. Vennligst prøv igjen senere.", "error")
         return redirect(url_for('stocks.index'))
 
 @stocks.route('/search')
 @trial_required
 def search():
     """Search for stocks"""
-    query = request.args.get('query', '')
+    query = request.args.get('q', '').strip()
     if not query:
-        return redirect(url_for('stocks.index'))
+        return jsonify([])
     
-    results = DataService.search_ticker(query)
-    return render_template('stocks/search.html', results=results, query=query)
+    try:
+        results = DataService.search_stocks(query)
+        return jsonify(results)
+    except Exception as e:
+        current_app.logger.error(f"Error in stock search: {str(e)}")
+        return jsonify({'error': 'Søket feilet. Vennligst prøv igjen.'}), 500
 
 @stocks.route('/list/oslo')
 @trial_required
 def oslo_list():
     """List all Oslo Børs stocks"""
-    oslo_stocks = DataService.get_oslo_bors_overview()
-    return render_template('stocks/list.html', stocks=oslo_stocks, title="Oslo Børs")
+    try:
+        stocks = DataService.get_oslo_bors_overview()
+        return render_template(
+            'stocks/list.html',
+            stocks=stocks,
+            market_type="oslo",
+            title="Oslo Børs"
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in Oslo Børs list: {str(e)}")
+        flash("Kunne ikke hente Oslo Børs data. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/list.html', stocks={}, title="Oslo Børs", market_type="oslo")
 
 @stocks.route('/list/global')
 @trial_required
 def global_list():
-    """List popular global stocks"""
-    global_stocks = DataService.get_global_stocks_overview()
-    return render_template('stocks/list.html', stocks=global_stocks, title="Global Markets")
+    """List global stocks"""
+    try:
+        stocks = DataService.get_global_stocks_overview()
+        return render_template(
+            'stocks/list.html',
+            stocks=stocks,
+            market_type="global",
+            title="Globale markeder"
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in global stocks list: {str(e)}")
+        flash("Kunne ikke hente globale markedsdata. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/list.html', stocks={}, title="Globale markeder", market_type="global")
 
 @stocks.route('/list/crypto')
 @trial_required
 def crypto_list():
-    """Show cryptocurrency list"""
-    page = request.args.get('page', 1, type=int)
-    per_page = 50  # Increased number of items per page
-    
-    crypto_data = DataService.get_crypto_list(page=page, per_page=per_page)
-    total_items = DataService.get_crypto_count()
-    total_pages = math.ceil(total_items / per_page)
-    
-    has_next = page < total_pages
-    
-    return render_template(
-        'stocks/crypto.html',
-        crypto_data=crypto_data,
-        current_page=page,
-        has_next_page=has_next
-    )
+    """List cryptocurrencies"""
+    try:
+        stocks = DataService.get_crypto_overview()
+        return render_template(
+            'stocks/crypto.html',
+            stocks=stocks,
+            market_type="crypto",
+            title="Kryptovaluta"
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in crypto list: {str(e)}")
+        flash("Kunne ikke hente kryptovalutadata. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/crypto.html', stocks={}, title="Kryptovaluta", market_type="crypto")
 
 @stocks.route('/list/currency')
 @trial_required
-def currency():
-    """Show currency exchange rates"""
-    page = request.args.get('page', 1, type=int)
-    base = request.args.get('base', 'NOK')
-    per_page = 50
-    
-    currencies = DataService.get_currency_list(base=base, page=page, per_page=per_page)
-    total_items = DataService.get_currency_count()
-    total_pages = math.ceil(total_items / per_page)
-    
-    has_next = page < total_pages
-    
-    return render_template(
-        'stocks/currency.html',
-        currencies=currencies,
-        current_page=page,
-        has_next_page=has_next
-    )
-
-@stocks.route('/compare')
-@trial_required
-def compare():
-    """Compare multiple stocks"""
-    tickers = request.args.get('tickers', '').split(',')
-    tickers = [t.strip() for t in tickers if t.strip()]
-    
-    if not tickers:
-        return render_template('stocks/compare_form.html')
-    
-    comparison_data = {}
-    chart_data = {}
-    start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
-    
-    for ticker in tickers:
-        try:
-            info = DataService.get_stock_info(ticker)
-            data = DataService.get_stock_data(ticker, period='1y')
-            technical = AnalysisService.get_technical_indicators(data)
-            
-            if not data.empty:
-                # Current data
-                comparison_data[ticker] = {
-                    'name': info.get('shortName', ticker),
-                    'last_price': round(data['Close'].iloc[-1], 2),
-                    'change_percent': round(((data['Close'].iloc[-1] / data['Close'].iloc[-2]) - 1) * 100, 2),
-                    'rsi': round(technical.get('rsi', 0), 2),
-                    'volume': int(data['Volume'].iloc[-1]),
-                    'year_high': round(data['High'].max(), 2),
-                    'year_low': round(data['Low'].min(), 2)
-                }
-                
-                # Chart data
-                chart_data[ticker] = {
-                    'dates': data.index.strftime('%Y-%m-%d').tolist(),
-                    'prices': data['Close'].tolist()
-                }
-        except Exception as e:
-            print(f"Error processing {ticker}: {str(e)}")
-    
-    return render_template(
-        'stocks/compare.html',
-        tickers=tickers,
-        comparison_data=comparison_data,
-        chart_data=chart_data
-    )
+def currency_list():
+    """List currency pairs"""
+    try:
+        stocks = DataService.get_currency_overview()
+        return render_template(
+            'stocks/currency.html',
+            stocks=stocks,
+            market_type="currency",
+            title="Valutakurser"
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in currency list: {str(e)}")
+        flash("Kunne ikke hente valutadata. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/currency.html', stocks={}, title="Valutakurser", market_type="currency")
 
 @stocks.route('/api/stock/<ticker>')
 def api_stock_data(ticker):
     """API endpoint for stock data"""
     try:
-        stock_data = DataService.get_stock_data(ticker)
-        if stock_data.empty:
-            return jsonify({'error': 'No data found for ticker'})
-        
-        data = {
-            'ticker': ticker,
-            'last_price': stock_data['Close'].iloc[-1],
-            'open': stock_data['Open'].iloc[-1],
-            'high': stock_data['High'].iloc[-1],
-            'low': stock_data['Low'].iloc[-1],
-            'volume': stock_data['Volume'].iloc[-1],
-            'date': stock_data.index[-1].strftime('%Y-%m-%d')
-        }
-        
+        period = request.args.get('period', '1d')
+        interval = request.args.get('interval', '1m')
+        data = DataService.get_stock_data(ticker, period, interval)
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)})
+        current_app.logger.error(f"Error in stock API for {ticker}: {str(e)}")
+        return jsonify({'error': 'Kunne ikke hente aksjedata'}), 500
+
+@stocks.route('/compare')
+@trial_required
+def compare():
+    """Compare multiple stocks"""
+    try:
+        tickers = request.args.getlist('ticker')
+        if not tickers:
+            return render_template('stocks/compare.html')
+        
+        stocks_data = {}
+        for ticker in tickers:
+            try:
+                stock_info = DataService.get_stock_info(ticker)
+                stock_data = DataService.get_stock_data(ticker, period='6mo', interval='1d')
+                stocks_data[ticker] = {
+                    'info': stock_info,
+                    'data': stock_data
+                }
+            except Exception as e:
+                current_app.logger.error(f"Error getting data for {ticker}: {str(e)}")
+        
+        return render_template(
+            'stocks/compare.html',
+            stocks=stocks_data,
+            tickers=tickers
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in stock comparison: {str(e)}")
+        flash("Kunne ikke sammenligne aksjene. Vennligst prøv igjen senere.", "error")
+        return render_template('stocks/compare.html')

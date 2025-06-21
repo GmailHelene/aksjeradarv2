@@ -15,53 +15,49 @@ portfolio = Blueprint('portfolio', __name__)
 @login_required
 @subscription_required
 def index():
-    """Show user's portfolio"""
+    """Show user's portfolio overview"""
     try:
-        # For ikke-innloggede brukere, vis en demo-portefølje
-        if not current_user.is_authenticated:
-            return render_template('portfolio/login_required.html')
+        user_portfolios = Portfolio.query.filter_by(user_id=current_user.id).all()
+        portfolio_data = {}
+        
+        for p in user_portfolios:
+            stocks = PortfolioStock.query.filter_by(portfolio_id=p.id).all()
+            portfolio_data[p.id] = {
+                'name': p.name,
+                'stocks': [],
+                'total_value': 0,
+                'total_gain': 0
+            }
             
-        # Hent brukerens portefølje
-        user_portfolio = Portfolio.query.filter_by(user_id=current_user.id).first()
+            for stock in stocks:
+                try:
+                    stock_data = DataService.get_stock_info(stock.ticker)
+                    current_value = stock_data['last_price'] * stock.quantity
+                    gain = current_value - (stock.purchase_price * stock.quantity)
+                    
+                    portfolio_data[p.id]['stocks'].append({
+                        'ticker': stock.ticker,
+                        'name': stock_data['name'],
+                        'quantity': stock.quantity,
+                        'purchase_price': stock.purchase_price,
+                        'current_price': stock_data['last_price'],
+                        'current_value': current_value,
+                        'gain': gain,
+                        'gain_percent': (gain / (stock.purchase_price * stock.quantity)) * 100
+                    })
+                    
+                    portfolio_data[p.id]['total_value'] += current_value
+                    portfolio_data[p.id]['total_gain'] += gain
+                    
+                except Exception as e:
+                    current_app.logger.error(f"Error getting data for {stock.ticker}: {str(e)}")
         
-        if not user_portfolio:
-            # Opprett en ny portefølje hvis brukeren ikke har en
-            user_portfolio = Portfolio(user_id=current_user.id, name="Min portefølje")
-            db.session.add(user_portfolio)
-            db.session.commit()
-            
-        # Hent aksjer i porteføljen
-        portfolio_stocks = PortfolioStock.query.filter_by(portfolio_id=user_portfolio.id).all()
+        return render_template('portfolio/overview.html', portfolios=portfolio_data)
         
-        # Hent gjeldende markedsdata for aksjene
-        stocks_data = {}
-        for ps in portfolio_stocks:
-            stock_data = DataService.get_single_stock_data(ps.ticker)
-            if stock_data:
-                stocks_data[ps.ticker] = stock_data
-                stocks_data[ps.ticker]['quantity'] = ps.quantity
-                stocks_data[ps.ticker]['purchase_price'] = ps.purchase_price
-                # Beregn gevinst/tap
-                if 'last_price' in stock_data and stock_data['last_price'] != 'N/A':
-                    current_value = float(stock_data['last_price']) * ps.quantity
-                    purchase_value = ps.purchase_price * ps.quantity
-                    stocks_data[ps.ticker]['profit_loss'] = current_value - purchase_value
-                    stocks_data[ps.ticker]['profit_loss_percent'] = ((current_value / purchase_value) - 1) * 100 if purchase_value > 0 else 0
-                
-        # Beregn porteføljens totalverdi
-        total_value = sum(float(data['last_price']) * data['quantity'] 
-                           for ticker, data in stocks_data.items() 
-                           if data['last_price'] != 'N/A')
-        
-        return render_template(
-            'portfolio/index.html',
-            portfolio=user_portfolio,
-            stocks=stocks_data,
-            total_value=total_value
-        )
     except Exception as e:
-        print(f"Error in portfolio index: {str(e)}")
-        return render_template('error.html', error=f"Det oppstod en feil: {str(e)}")
+        current_app.logger.error(f"Error in portfolio overview: {str(e)}")
+        flash("Kunne ikke hente porteføljedata. Vennligst prøv igjen senere.", "error")
+        return render_template('portfolio/overview.html', portfolios={})
 
 @portfolio.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -498,6 +494,106 @@ def remove_stock(ticker):
     
     flash(f'{ticker} fjernet fra porteføljen.', 'success')
     return redirect(url_for('portfolio.index'))
+
+@portfolio.route('/overview')
+@login_required
+@subscription_required
+def overview():
+    """Vis porteføljeoversikt med grafer og statistikk"""
+    try:
+        portfolio = Portfolio.query.filter_by(user_id=current_user.id).first()
+        if not portfolio:
+            flash('Du har ingen portefølje ennå.', 'warning')
+            return redirect(url_for('portfolio.index'))
+        
+        portfolio_stocks = PortfolioStock.query.filter_by(portfolio_id=portfolio.id).all()
+        
+        # Samle data for oversikten
+        overview_data = {
+            'total_value': 0,
+            'total_profit_loss': 0,
+            'sectors': {},
+            'performance': [],
+            'stocks': {}
+        }
+        
+        for ps in portfolio_stocks:
+            stock_data = DataService.get_single_stock_data(ps.ticker)
+            if stock_data:
+                current_value = float(stock_data['last_price']) * ps.quantity
+                purchase_value = ps.purchase_price * ps.quantity
+                profit_loss = current_value - purchase_value
+                
+                overview_data['total_value'] += current_value
+                overview_data['total_profit_loss'] += profit_loss
+                
+                # Sektorfordeling
+                sector = stock_data.get('sector', 'Annet')
+                if sector not in overview_data['sectors']:
+                    overview_data['sectors'][sector] = 0
+                overview_data['sectors'][sector] += current_value
+                
+                # Aksjedata
+                overview_data['stocks'][ps.ticker] = {
+                    'name': stock_data.get('shortName', ps.ticker),
+                    'quantity': ps.quantity,
+                    'purchase_price': ps.purchase_price,
+                    'current_price': stock_data['last_price'],
+                    'current_value': current_value,
+                    'profit_loss': profit_loss,
+                    'profit_loss_percent': ((current_value / purchase_value) - 1) * 100 if purchase_value > 0 else 0
+                }
+        
+        # Beregn prosenter for sektorfordeling
+        if overview_data['total_value'] > 0:
+            for sector in overview_data['sectors']:
+                overview_data['sectors'][sector] = round(
+                    (overview_data['sectors'][sector] / overview_data['total_value']) * 100, 2
+                )
+        
+        return render_template('portfolio/overview.html', overview=overview_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in portfolio overview: {str(e)}")
+        flash('En feil oppstod under lasting av porteføljeoversikt.', 'error')
+        return redirect(url_for('portfolio.index'))
+
+@portfolio.route('/transactions')
+@login_required
+@subscription_required
+def transactions():
+    """Show transaction history"""
+    try:
+        # Get all portfolios for the user
+        portfolios = Portfolio.query.filter_by(user_id=current_user.id).all()
+        
+        # Get all transactions for all portfolios
+        all_transactions = []
+        for p in portfolios:
+            stocks = PortfolioStock.query.filter_by(portfolio_id=p.id).all()
+            for stock in stocks:
+                all_transactions.append({
+                    'portfolio': p.name,
+                    'ticker': stock.ticker,
+                    'quantity': stock.quantity,
+                    'price': stock.purchase_price,
+                    'date': stock.purchase_date,
+                    'total': stock.quantity * stock.purchase_price
+                })
+        
+        # Sort transactions by date
+        all_transactions.sort(key=lambda x: x['date'], reverse=True)
+        
+        return render_template(
+            'portfolio/transactions.html',
+            transactions=all_transactions,
+            portfolios=portfolios
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in transaction history: {str(e)}")
+        flash("Kunne ikke hente transaksjonshistorikk. Vennligst prøv igjen senere.", "error")
+        return render_template('portfolio/transactions.html', transactions=[], portfolios=[])
 
 # Helper method to get stock data
 def get_single_stock_data(ticker):

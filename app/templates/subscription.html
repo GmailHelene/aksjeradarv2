@@ -23,18 +23,7 @@
                 <p>Ditt abonnement er gyldig til: {{ current_user.subscription_end.strftime('%d.%m.%Y') }}</p>
             {% endif %}
         </div>
-    {% elif trial_remaining and trial_remaining > 0 %}
-        <div class="alert alert-info text-center mb-5">
-            <h4 class="alert-heading">Din gratis prøveperiode er aktiv!</h4>
-            <p>Du har <strong>{{ trial_remaining }} minutter</strong> igjen av din gratis prøveperiode.</p>
-            <p>Kjøp et abonnement nedenfor for å få uavbrutt tilgang til alle funksjoner.</p>
-        </div>
-    {% elif current_user.is_authenticated and current_user.trial_used %}
-        <div class="alert alert-warning text-center mb-5">
-            <h4 class="alert-heading">Din prøveperiode er utløpt</h4>
-            <p>Kjøp et abonnement nedenfor for å få tilgang til alle funksjoner igjen.</p>
-        </div>
-    {% elif current_user.is_authenticated and not current_user.trial_used %}
+    {% elif current_user.is_authenticated %}
         <div class="card mb-5">
             <div class="card-body text-center">
                 <h4 class="card-title">Prøv Aksjeradar gratis</h4>
@@ -63,12 +52,12 @@
                         <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
                         <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
                         <li class="list-group-item">Teknisk analyse av alle aksjer</li>
-                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
+                        <li class="list-group-item">Ubegrenset bruk av porteføljeverktøy</li>
                         <li class="list-group-item">Avbryt når som helst</li>
                     </ul>
                     <div class="mt-auto text-center">
                         {% if current_user.is_authenticated %}
-                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                        <form action="{{ url_for('stripe.create_checkout_session') }}" method="post">
                             <input type="hidden" name="subscription_type" value="monthly">
                             <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
                         </form>
@@ -92,12 +81,12 @@
                         <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
                         <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
                         <li class="list-group-item">Teknisk analyse av alle aksjer</li>
-                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
+                        <li class="list-group-item">Ubegrenset bruk av porteføljeverktøy</li>
                         <li class="list-group-item">Prioritert support</li>
                     </ul>
                     <div class="mt-auto text-center">
                         {% if current_user.is_authenticated %}
-                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                        <form action="{{ url_for('stripe.create_checkout_session') }}" method="post">
                             <input type="hidden" name="subscription_type" value="yearly">
                             <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
                         </form>
@@ -115,18 +104,17 @@
                     <h3>Livstid</h3>
                 </div>
                 <div class="card-body d-flex flex-column">
-                    <h4 class="card-title text-center">2499 kr <small class="text-muted">engangsbeløp</small></h4>
+                    <h4 class="card-title text-center">4999 kr <small class="text-muted">en gang</small></h4>
                     <ul class="list-group list-group-flush mb-4">
-                        <li class="list-group-item">Ubegrenset tilgang til alle analyser</li>
-                        <li class="list-group-item">AI aksjeanalyse og anbefalinger</li>
-                        <li class="list-group-item">Teknisk analyse av alle aksjer</li>
-                        <li class="list-group-item">Obegrenset bruk av porteføljeverktøy</li>
-                        <li class="list-group-item">Livstid med oppdateringer</li>
+                        <li class="list-group-item">Alt i årlig abonnement</li>
+                        <li class="list-group-item">Ingen fremtidige betalinger</li>
+                        <li class="list-group-item">Livslang tilgang til alle funksjoner</li>
+                        <li class="list-group-item">Gratis oppgraderinger for alltid</li>
                         <li class="list-group-item">Prioritert support</li>
                     </ul>
                     <div class="mt-auto text-center">
                         {% if current_user.is_authenticated %}
-                        <form action="{{ url_for('main.create_checkout_session') }}" method="post">
+                        <form action="{{ url_for('stripe.create_checkout_session') }}" method="post">
                             <input type="hidden" name="subscription_type" value="lifetime">
                             <button type="submit" class="btn btn-primary btn-lg">Kjøp nå</button>
                         </form>
@@ -149,52 +137,52 @@
                     <div class="accordion" id="faqAccordion">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqOne">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    Hva er inkludert i abonnementet?
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                    Kan jeg avbryte abonnementet når som helst?
                                 </button>
                             </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="faqOne" data-bs-parent="#faqAccordion">
+                            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Abonnementet gir deg full tilgang til alle funksjoner i Aksjeradar, inkludert AI-drevet aksjeanalyse, tekniske analyser, porteføljestyring, anbefalinger og historiske data.
+                                    Ja, du kan avbryte månedsabonnementet når som helst. Du vil fortsatt ha tilgang til premium-funksjonene ut perioden du har betalt for.
                                 </div>
                             </div>
                         </div>
                         
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqTwo">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                    Kan jeg avbryte abonnementet?
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                    Hvilke betalingsmetoder aksepterer dere?
                                 </button>
                             </h2>
-                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#faqAccordion">
+                            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Ja, du kan enkelt avbryte månedlige eller årlige abonnementer når som helst. Abonnementet vil fortsette til slutten av inneværende betalingsperiode.
+                                    Vi aksepterer alle vanlige betalingskort (VISA, Mastercard). Betalingen gjennomføres sikkert via Stripe.
                                 </div>
                             </div>
                         </div>
                         
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqThree">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                    Hvilke betalingsmetoder aksepterer dere?
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                    Hva får jeg tilgang til med et premium-abonnement?
                                 </button>
                             </h2>
-                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#faqAccordion">
+                            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Vi aksepterer alle større kredittkort, debetkort og Vipps.
+                                    Med et premium-abonnement får du tilgang til alle funksjonene i Aksjeradar, inkludert teknisk analyse, AI-drevne anbefalinger, ubegrenset porteføljetracking, og prioritert kundeservice.
                                 </div>
                             </div>
                         </div>
                         
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="faqFour">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                                    Har dere en refusjonspolicy?
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                                    Er dataene i sanntid?
                                 </button>
                             </h2>
-                            <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="faqFour" data-bs-parent="#faqAccordion">
+                            <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    Vi tilbyr 14 dagers pengene-tilbake-garanti for nye abonnenter. Kontakt oss for refusjon innen denne perioden.
+                                    Ja, vi leverer sanntidsdata for Oslo Børs og globale aksjer i åpningstiden. For krypto og valuta oppdateres prisene hvert minutt.
                                 </div>
                             </div>
                         </div>
@@ -204,4 +192,49 @@
         </div>
     </div>
 </div>
+
+{% if current_user.is_authenticated and not subscription_active %}
+<script>
+const stripe = Stripe('{{ config.STRIPE_PUBLISHABLE_KEY }}');
+
+document.querySelectorAll('form[action*="checkout-session"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const button = form.querySelector('button[type="submit"]');
+        button.disabled = true;
+        button.textContent = 'Vennligst vent...';
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(new FormData(form))
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            const result = await stripe.redirectToCheckout({
+                sessionId: data.sessionId
+            });
+            
+            if (result.error) {
+                throw new Error(result.error.message);
+            }
+        } catch (error) {
+            button.disabled = false;
+            button.textContent = 'Kjøp nå';
+            alert('Det oppstod en feil. Vennligst prøv igjen senere.');
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endif %}
+
 {% endblock %}

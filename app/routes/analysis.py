@@ -385,6 +385,39 @@ def technical():
                               error=f"En feil oppstod: {str(e)}",
                               ticker=ticker)
 
+@analysis.route('/technical/<ticker>')
+@subscription_required
+def technical_analysis(ticker):
+    """Show technical analysis for a specific stock"""
+    try:
+        # Get stock data
+        stock_data = DataService.get_stock_data(ticker, period='6mo', interval='1d')
+        stock_info = DataService.get_stock_info(ticker)
+        
+        # Get technical indicators
+        indicators = AnalysisService.calculate_technical_indicators(stock_data)
+        
+        # Get AI-based prediction if available
+        try:
+            prediction = AIService.get_stock_prediction(ticker)
+        except Exception as e:
+            current_app.logger.warning(f"Could not get AI prediction for {ticker}: {str(e)}")
+            prediction = None
+        
+        return render_template(
+            'analysis/technical.html',
+            ticker=ticker,
+            stock=stock_info,
+            data=stock_data,
+            indicators=indicators,
+            prediction=prediction
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in technical analysis for {ticker}: {str(e)}")
+        flash(f"Kunne ikke hente teknisk analyse for {ticker}. Vennligst prøv igjen senere.", "error")
+        return redirect(url_for('stocks.index'))
+
 @analysis.route('/prediction', methods=['GET', 'POST'])
 @subscription_required
 def prediction():

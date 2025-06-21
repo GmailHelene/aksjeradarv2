@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, jsonify, session, send_from_directory
 from flask_login import login_user, logout_user, login_required, current_user
 from ..services.data_service import DataService
 from ..models.user import User
@@ -49,38 +49,25 @@ def on_register(state):
 @main.route('/')
 @trial_required
 def index():
-    market_overview = {}
-    oslo_stocks = {}
-    global_stocks = {}
-    crypto = {}
-    currency = {}
-    
+    """Home page"""
     try:
-        # Hent markedsoversikt
-        market_overview = DataService.get_market_overview()
+        # Get market data for the homepage
+        oslo_stocks = DataService.get_oslo_bors_overview(limit=5)
+        global_stocks = DataService.get_global_stocks_overview(limit=5)
+        crypto = DataService.get_crypto_overview(limit=5)
+        currency = DataService.get_currency_overview()
         
-        # Hent Oslo Børs data
-        oslo_stocks = DataService.get_oslo_bors_overview()
-        
-        # Hent globale aksjer
-        global_stocks = DataService.get_global_stocks_overview()
-        
-        # Hent kryptovaluta
-        crypto = DataService.get_crypto_list()
-        
-        # Hent valutadata
-        currency = DataService.get_currency_list()
+        return render_template(
+            'index.html',
+            oslo_stocks=oslo_stocks,
+            global_stocks=global_stocks,
+            crypto=crypto,
+            currency=currency
+        )
     except Exception as e:
-        print(f"Error getting data for index page: {str(e)}")
-    
-    return render_template(
-        'index.html',
-        market_overview=market_overview,
-        oslo_stocks=oslo_stocks,
-        global_stocks=global_stocks,
-        crypto=crypto,
-        currency=currency
-    )
+        current_app.logger.error(f"Error in index route: {str(e)}")
+        flash("En feil oppstod ved henting av markedsdata. Vennligst prøv igjen senere.", "error")
+        return render_template('index.html')
 
 @main.route('/search')
 def search():
@@ -99,17 +86,17 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
             login_user(user)
-            flash('Logged in!', 'success')
+            flash('Du er nå logget inn!', 'success')
             return redirect(url_for('main.index'))
         else:
-            flash('Invalid credentials', 'danger')
+            flash('Ugyldig brukernavn eller passord', 'danger')
     return render_template('login.html')
 
 @main.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('Logged out', 'success') 
+    flash('Du er nå logget ut', 'success') 
     return redirect(url_for('main.index'))
 
 @main.route('/register', methods=['GET', 'POST'])
@@ -301,34 +288,25 @@ def service_worker():
     """Serve the service worker from the root"""
     return current_app.send_static_file('service-worker.js')
 
+@main.route('/manifest.json')
+def manifest():
+    """Serve the manifest.json file for PWA support"""
+    try:
+        return send_from_directory('static', 'manifest.json')
+    except Exception as e:
+        current_app.logger.error(f"Error serving manifest.json: {str(e)}")
+        return jsonify({'error': 'Manifest not found'}), 404
+
 @main.route('/version')
 def version():
-    """Display version information"""
-    version_file = os.path.join(current_app.static_folder, 'version.txt')
-    version_info = "Version information not available"
-    
-    if os.path.exists(version_file):
-        try:
-            with open(version_file, 'r') as f:
-                version_info = f.read()
-        except Exception as e:
-            current_app.logger.error(f"Error reading version file: {str(e)}")
-    
-    # Collect debug info if available
-    debug_info = None
+    """Return the current version of the application"""
     try:
-        debug_info = {
-            'deployed_time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'flask_env': os.environ.get('FLASK_ENV', 'production'),
-            'database_url': current_app.config.get('SQLALCHEMY_DATABASE_URI', 'Not available'),
-            'static_folder': current_app.static_folder,
-            'template_folder': current_app.template_folder,
-            'cache_setting': current_app.config.get('SEND_FILE_MAX_AGE_DEFAULT', 'Default')
-        }
+        with open('static/version.txt', 'r') as f:
+            version = f.read().strip()
+        return jsonify({'version': version})
     except Exception as e:
-        current_app.logger.error(f"Error collecting debug info: {str(e)}")
-    
-    return render_template('version.html', version_info=version_info, debug_info=debug_info)
+        current_app.logger.error(f"Error reading version: {str(e)}")
+        return jsonify({'version': 'unknown'})
 
 @main.route('/privacy')
 def privacy():
@@ -572,18 +550,78 @@ def handle_subscription_deleted(subscription):
 
 @main.route('/trial-expired')
 def trial_expired():
-    """Show the trial expired page"""
-    trial_used = False
-    if current_user.is_authenticated:
-        trial_used = current_user.trial_used
-    else:
-        # Check anonymous trial
-        trial_start = session.get('anonymous_trial_start')
-        if trial_start:
-            trial_start = datetime.fromisoformat(trial_start)
-            trial_end = trial_start + timedelta(minutes=10)
-            trial_used = datetime.utcnow() > trial_end
-    
-    return render_template('trial-expired.html', 
-                         trial_used=trial_used,
-                         is_authenticated=current_user.is_authenticated)
+    """Show the trial expired page with subscription options"""
+    # If user is already subscribed, redirect to home
+    if current_user.is_authenticated and current_user.has_active_subscription():
+        return redirect(url_for('main.index'))
+        
+    return render_template(
+        'trial-expired.html',
+        monthly_price=99,
+        yearly_price=799,
+        yearly_savings=33,  # Savings percentage for yearly plan
+        stripe_public_key=current_app.config['STRIPE_PUBLIC_KEY']
+    )
+
+@main.route('/contact')
+def contact():
+    """Display contact page"""
+    return render_template('contact.html')
+
+@main.route('/contact/submit', methods=['POST'])
+def contact_submit():
+    """Handle contact form submission"""
+    try:
+        name = request.form.get('name')
+        email = request.form.get('email')
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        
+        # Log the contact form submission
+        current_app.logger.info(f"Contact form submission from {name} ({email}): {subject}")
+        
+        # Here you would typically send an email or store in database
+        # For now, we'll just show a success message
+        
+        flash('Takk for din henvendelse! Vi vil svare deg så snart som mulig.', 'success')
+        return redirect(url_for('main.contact'))
+    except Exception as e:
+        current_app.logger.error(f"Error processing contact form: {str(e)}")
+        flash('Det oppstod en feil ved sending av skjemaet. Vennligst prøv igjen.', 'danger')
+        return redirect(url_for('main.contact'))
+
+@main.route('/api/oslo_stocks')
+@trial_required
+def get_oslo_stocks():
+    try:
+        data = DataService.get_oslo_bors_overview()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main.route('/api/global_stocks')
+@trial_required
+def get_global_stocks():
+    try:
+        data = DataService.get_global_stocks_overview()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main.route('/api/crypto')
+@trial_required
+def get_crypto():
+    try:
+        data = DataService.get_crypto_list()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@main.route('/api/currency')
+@trial_required
+def get_currency():
+    try:
+        data = DataService.get_currency_list()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

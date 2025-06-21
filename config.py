@@ -31,10 +31,18 @@ class Config:    # Security settings
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Brukersesjoner
+    SQLALCHEMY_TRACK_MODIFICATIONS = False    # Session settings
+    SESSION_TYPE = 'filesystem'
+    SESSION_FILE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_session')
+    SESSION_FILE_THRESHOLD = 500  # Maximum number of files stored
+    SESSION_COOKIE_SECURE = os.environ.get('FLASK_ENV') == 'production'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_PARTITIONED = True # Support for Chrome's CHIPS (Cookie Having Independent Partitioned State)
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
+    # Ensure proper session handling for APIs
+    SESSION_REFRESH_EACH_REQUEST = True
+    SESSION_COOKIE_NAME = 'aksjeradar_session'
 
     # Pagination
     STOCKS_PER_PAGE = 20

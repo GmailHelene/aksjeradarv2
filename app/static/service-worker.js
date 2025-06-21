@@ -1,36 +1,35 @@
 // Service Worker for Aksjeradar PWA
 
-const CACHE_NAME = 'aksjeradar-cache-v1750345341';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'aksjeradar-cache-v1';
 
-// Assets to cache
-const ASSETS_TO_CACHE = [
+// Resources to cache on install
+const PRECACHE_RESOURCES = [
   '/',
-  '/offline.html',
-  '/static/css/bootstrap.min.css',
   '/static/css/style.css',
-  '/static/js/bootstrap.bundle.min.js',
-  '/static/js/chart.min.js',
-  '/static/js/app.js',
+  '/static/js/main.js',
   '/static/images/logo-192.png',
-  '/static/images/logo-512.png',
-  '/static/manifest.json'
+  '/static/manifest.json',
+  '/offline',
+  '/static/icons/icon-192x192.png',
+  '/static/icons/icon-512x512.png'
 ];
 
-// Install event - cache static assets
+// On Service Worker Install
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Caching app assets');
-        return cache.addAll(ASSETS_TO_CACHE);
+        console.log('Opened cache');
+        return cache.addAll(PRECACHE_RESOURCES);
       })
-      .then(() => self.skipWaiting())
   );
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// On Service Worker Activate
 self.addEventListener('activate', event => {
+  // Clean up old caches
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -40,110 +39,76 @@ self.addEventListener('activate', event => {
           return caches.delete(cacheName);
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  // Claims control for all clients in scope
+  self.clients.claim();
 });
 
-// Fetch event - respond with cache, then network
+// On fetch - implement cache-first strategy with fallback to network
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
-
-  // For API requests, try network first, then fall back to offline page if offline
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          return caches.match(OFFLINE_URL);
-        })
-    );
-    return;
-  }
-
-  // For navigation requests, try network first, then cache
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          // Cache the response if successful
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                return cachedResponse;
-              }
-              return caches.match(OFFLINE_URL);
-            });
-        })
-    );
-    return;
-  }
-
-  // For other requests, try cache first, then network
   event.respondWith(
     caches.match(event.request)
-      .then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
+      .then(response => {
+        // Cache hit - return response
+        if (response) {
+          return response;
         }
-        return fetch(event.request)
+
+        // Clone the request
+        const fetchRequest = event.request.clone();
+
+        // Try to fetch from network
+        return fetch(fetchRequest)
           .then(response => {
-            // Cache the response if successful
-            if (response.status === 200) {
-              const responseClone = response.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                cache.put(event.request, responseClone);
-              });
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
             }
+
+            // Clone the response
+            const responseToCache = response.clone();
+
+            // Cache the fetched response
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              });
+
             return response;
           })
           .catch(error => {
-            console.error('Fetch failed:', error);
-            // For image requests, return a placeholder
-            if (event.request.url.match(/\.(jpg|jpeg|png|gif|svg)$/)) {
-              return caches.match('/static/images/placeholder.png');
+            // Network request failed, try to return offline page
+            if (event.request.mode === 'navigate') {
+              return caches.match('/offline');
             }
-            throw error;
+            
+            return null;
           });
       })
   );
 });
 
-// Background sync for offline actions
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-portfolio') {
-    event.waitUntil(syncPortfolio());
-  }
-});
-
-// Push notification handler
+// Handle push notifications
 self.addEventListener('push', event => {
   const data = event.data.json();
+  
   const options = {
     body: data.body,
-    icon: '/static/images/logo-192.png',
-    badge: '/static/images/badge.png',
+    icon: '/static/icons/icon-192x192.png',
+    badge: '/static/icons/badge-72x72.png',
+    vibrate: [100, 50, 100],
     data: {
       url: data.url
     }
   };
-
+  
   event.waitUntil(
     self.registration.showNotification(data.title, options)
   );
 });
 
-// Notification click handler
+// Handle notification click
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   
@@ -153,16 +118,3 @@ self.addEventListener('notificationclick', event => {
     );
   }
 });
-
-// Function to sync portfolio data (mock implementation)
-function syncPortfolio() {
-  return fetch('/api/portfolio/sync', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      timestamp: new Date().toISOString()
-    })
-  });
-}

@@ -4,28 +4,14 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="bg-dark text-white py-4">
-    <div class="container py-2 bg-dark">
+<section class="bg-black text-white py-4">
+    <div class="container py-2 bg-black">
         <div class="row align-items-center">
             <div class="col-lg-10 mb-3 mb-lg-0">
                 <h1 class="display-5 fw-bold mb-2 text-white">Aksjeradar</h1>
-                <p class="lead mb-3 text-whi        <!-- Call to Action -->
-        <div class="card bg-dark text-white mb-5">
-            <div class="card-body p-4 text-center">
-                <h2 class="h3 mb-3">Start din investeringsreise i dag</h2>
-                <p class="lead mb-4">Lag en gratis konto for å spore aksjer, opprette porteføljer og få personlige anbefalinger.</p>
-                <div class="d-flex justify-content-center gap-3">
-                    {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('portfolio.index') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Min portefølje</a>
-                    {% else %}
-                    <a href="{{ url_for('main.register') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Registrer deg</a>
-                    <a href="{{ url_for('main.login') }}" class="btn btn-outline-light btn-lg">Logg inn</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>e aksje- og finansassistent for Oslo Børs og internasjonale markeder.</p>
+                <p class="lead mb-3 text-white">Din digitale aksje- og finansassistent for Oslo Børs og internasjonale markeder.</p>
                 <div class="d-grid gap-2 d-md-flex">
-                    <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-light px-4 me-md-2"><i class="bi bi-graph-up"></i> Utforsk aksjer</a>
+                    <a href="{{ url_for('stocks.oslo_list') }}" class="btn btn-dark px-4 me-md-2"><i class="bi bi-graph-up"></i> Utforsk aksjer</a>
                     <a href="{{ url_for('analysis.technical') }}" class="btn btn-outline-light px-4"><i class="bi bi-bar-chart"></i> Teknisk analyse</a>
                 </div>
             </div>
@@ -38,6 +24,21 @@
 
 <section class="py-5">
     <div class="container">
+        <!-- Call to Action -->
+        <div class="card bg-black text-white mb-5">
+            <div class="card-body p-4 text-center">
+                <h2 class="h3 mb-3">Start din investeringsreise i dag</h2>
+                <p class="lead mb-4">Lag en gratis konto for å spore aksjer, opprette porteføljer og få personlige anbefalinger.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('portfolio.index') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Min portefølje</a>
+                    {% else %}
+                    <a href="{{ url_for('main.register') }}" class="btn btn-dark bg-black text-white btn-lg hover-dark">Registrer deg</a>
+                    <a href="{{ url_for('main.login') }}" class="btn btn-outline-light btn-lg">Logg inn</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         <!-- Market Snapshot -->
         <div class="row mb-4 align-items-center">
             <div class="col-md-6">
@@ -62,7 +63,8 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm mb-0">
+                            <!-- Oslo Børs Table -->
+                            <table class="table table-hover table-sm mb-0" id="oslo-stocks-table">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Ticker</th>
@@ -70,27 +72,9 @@
                                         <th>+/-</th>
                                         <th>Signal</th>
                                     </tr>
-                                </thead>                                <tbody>
-                                    {% for ticker, stock in oslo_stocks.items() %}
-                                    {% if loop.index <= 12 %}
-                                    <tr>
-                                        <td><a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">{{ ticker }}</a></td>
-                                        <td>{{ stock.last_price }}</td>
-                                        <td class="{% if stock.change_percent > 0 %}text-success{% elif stock.change_percent < 0 %}text-danger{% endif %}">
-                                            {{ stock.change_percent }}%
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if stock.signal == 'BUY' %}bg-success{% elif stock.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}" 
-                                                  data-bs-toggle="tooltip" title="Basert på teknisk analyse av prisutvikling, volum og momentum">
-                                                {{ stock.signal }}
-                                            </span>
-                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-sm btn-outline-primary ms-1" data-bs-toggle="tooltip" title="Se detaljer for {{ ticker }}">
-                                                <i class="bi bi-info-circle"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center">Laster data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -111,7 +95,8 @@
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm mb-0">
+                            <!-- Global Markets Table -->
+                            <table class="table table-hover table-sm mb-0" id="global-stocks-table">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Ticker</th>
@@ -119,27 +104,9 @@
                                         <th>+/-</th>
                                         <th>Signal</th>
                                     </tr>
-                                </thead>                                <tbody>
-                                    {% for ticker, stock in global_stocks.items() %}
-                                    {% if loop.index <= 12 %}
-                                    <tr>
-                                        <td><a href="{{ url_for('stocks.details', ticker=ticker) }}" class="text-decoration-none">{{ ticker }}</a></td>
-                                        <td>{{ stock.last_price }}</td>
-                                        <td class="{% if stock.change_percent > 0 %}text-success{% elif stock.change_percent < 0 %}text-danger{% endif %}">
-                                            {{ stock.change_percent }}%
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if stock.signal == 'BUY' %}bg-success{% elif stock.signal == 'SELL' %}bg-danger{% else %}bg-secondary{% endif %}"
-                                                  data-bs-toggle="tooltip" title="Basert på teknisk analyse av prisutvikling, volum og momentum">
-                                                {{ stock.signal }}
-                                            </span>
-                                            <a href="{{ url_for('stocks.details', ticker=ticker) }}" class="btn btn-sm btn-outline-success ms-1" data-bs-toggle="tooltip" title="Se detaljer for {{ ticker }}">
-                                                <i class="bi bi-info-circle"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-center">Laster data...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -610,18 +577,62 @@
 
 {% block scripts %}
 <script>
-    // Example of data timestamp info display
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add timestamp data to price elements
-        const priceElements = document.querySelectorAll('.card-text.fs-4');
-        priceElements.forEach(el => {
-            if (!el.querySelector('.data-timestamp')) {
-                const timestamp = document.createElement('div');
-                timestamp.className = 'data-timestamp';
-                timestamp.textContent = 'Data fra ' + new Date().toLocaleTimeString();
-                el.appendChild(timestamp);
-            }
+    // Funksjon for å oppdatere tabellene med data
+    function updateTable(data, tableId) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        if (!tbody || !data) return;
+
+        tbody.innerHTML = '';
+        Object.entries(data).slice(0, 12).forEach(([ticker, stock]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><a href="/stocks/details/${ticker}" class="text-decoration-none">${ticker}</a></td>
+                <td>${stock.last_price}</td>
+                <td class="${stock.change_percent > 0 ? 'text-success' : stock.change_percent < 0 ? 'text-danger' : ''}">${stock.change_percent}%</td>
+                <td>
+                    <span class="badge ${stock.signal === 'BUY' ? 'bg-success' : stock.signal === 'SELL' ? 'bg-danger' : 'bg-secondary'}"
+                          data-bs-toggle="tooltip" title="Basert på teknisk analyse">
+                        ${stock.signal}
+                    </span>
+                    <a href="/stocks/details/${ticker}" class="btn btn-sm btn-outline-primary ms-1" data-bs-toggle="tooltip" title="Se detaljer for ${ticker}">
+                        <i class="bi bi-info-circle"></i>
+                    </a>
+                </td>`;
+            tbody.appendChild(tr);
         });
+
+        // Initialize tooltips
+        const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltips.map(function (tooltip) {
+            return new bootstrap.Tooltip(tooltip);
+        });
+    }
+
+    // Last inn data asynkront
+    window.addEventListener('DOMContentLoaded', function() {
+        // Hent Oslo Børs data
+        fetch('/api/oslo_stocks')
+            .then(response => response.json())
+            .then(data => updateTable(data, 'oslo-stocks-table'))
+            .catch(error => console.error('Error loading Oslo stocks:', error));
+
+        // Hent globale aksjer
+        fetch('/api/global_stocks')
+            .then(response => response.json())
+            .then(data => updateTable(data, 'global-stocks-table'))
+            .catch(error => console.error('Error loading global stocks:', error));
+
+        // Hent kryptovaluta
+        fetch('/api/crypto')
+            .then(response => response.json())
+            .then(data => updateTable(data, 'crypto-table'))
+            .catch(error => console.error('Error loading crypto:', error));
+
+        // Hent valutadata
+        fetch('/api/currency')
+            .then(response => response.json())
+            .then(data => updateTable(data, 'currency-table'))
+            .catch(error => console.error('Error loading currency:', error));
     });
 </script>
 {% endblock %}
