@@ -361,8 +361,7 @@ class DataService:
                         result[currency] = {
                             'name': f"{currency}/{base}",
                             'last_price': rate,
-                            'change_percent': (change / rate) * 100,
-                            'is_fallback': False
+                            'change_percent': (change / rate) * 100,                            'is_fallback': False
                         }
                         success = True
                     except Exception as e:
@@ -373,7 +372,9 @@ class DataService:
                             'last_price': fallback['rate'],
                             'change_percent': fallback['change'],
                             'is_fallback': True
-                        }            for currency, data in result.items():
+                        }
+                        
+            for currency, data in result.items():
                 # Add signal based on change percent
                 if data['change_percent'] > 0.5:
                     result[currency]['signal'] = 'BUY'
